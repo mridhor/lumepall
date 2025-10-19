@@ -448,13 +448,13 @@ export default function Homepage() {
               <div className="flex-1 px-2 max-w-full" data-name="Paragraph" data-node-id="1:158">
                 <div className="bg-clip-padding border-0 border-[transparent] border-solid box-border relative w-full pr-0 md:pr-50 lg:pr-100 xl:pr-100">
                   <p className="flex flex-col leading-tight not-italic text-xl sm:text-xl md:text-2xl lg:text-3xl text-black mb-4 pr-0 xs:pr-20" data-node-id="1:159" style={{ fontFamily: 'Avenir Light', fontWeight: 300 }}>
-                  <span className="inline-block md:hidden">Building a world where Al invests </span>
-                  <span className="inline-block md:hidden">money better than any human can<DonutPeriod /></span>
-                  <span className="hidden md:inline-block">Building a world where Al invests money better than any human can<DonutPeriod /></span></p>
+                  <span className="inline-block md:hidden">Üheskoos rahaliselt vabaks.</span>
+                  <span className="inline-block md:hidden">Pane lumepall veerema.</span>
+                  <span className="hidden md:inline-block">Üheskoos rahaliselt vabaks. Pane lumepall veerema!</span></p>
                   
                   
                   <p className="leading-tight not-italic text-xl sm:text-xl md:text-2xl lg:text-3xl text-black mb-4 sm:mb-6 md:mb-8 pr-0 xs:pr-20 " data-node-id="1:161" style={{ fontFamily: 'Avenir Light', fontWeight: 300 }}>
-                    <span className="inline-block ">Snobol invests in global crises<DonutPeriod /></span>
+                    <span className="inline-block ">Lumepall osaku hetkeväärtus</span>
                   </p>
                 </div>
               </div>
