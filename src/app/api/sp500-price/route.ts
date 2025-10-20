@@ -51,16 +51,13 @@ export async function GET(request: NextRequest) {
       const normalizedPrice = actualPrice / baselinePrice;
       
       // Get current Snobol price from admin panel
-      let currentSnobolPrice = 18.49; // Default fallback
-      try {
-        const priceResponse = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/api/price`);
-        const priceData = await priceResponse.json();
-        if (priceData.currentPrice) {
-          currentSnobolPrice = priceData.currentPrice;
-        }
-      } catch (error) {
-        console.log('Using default Snobol price:', currentSnobolPrice);
+      // Require real-time Snobol price from internal API
+      const priceResponse = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/api/price`);
+      if (!priceResponse.ok) {
+        return NextResponse.json({ error: 'Current Snobol price unavailable' }, { status: 503 });
       }
+      const priceData = await priceResponse.json();
+      const currentSnobolPrice = priceData.currentPrice as number;
       
       // Update the financial data with today's data
       let updatedData = addTodayData(currentSnobolPrice, normalizedPrice);
@@ -81,70 +78,13 @@ export async function GET(request: NextRequest) {
     }
     
     // If Yahoo Finance fails, return a fallback price (last known good value)
-    const fallbackPrice = 6713.71;
-    const baselinePrice = 1697.48;
-    const normalizedPrice = fallbackPrice / baselinePrice;
-    
-    // Get current Snobol price from admin panel
-    let currentSnobolPrice = 18.49; // Default fallback
-    try {
-      const priceResponse = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/api/price`);
-      const priceData = await priceResponse.json();
-      if (priceData.currentPrice) {
-        currentSnobolPrice = priceData.currentPrice;
-      }
-    } catch (error) {
-      console.log('Using default Snobol price:', currentSnobolPrice);
-    }
-    
-    // Still update the financial data with fallback values
-    let updatedData = addTodayData(currentSnobolPrice, normalizedPrice);
-    updatedData = filterByPeriod(updatedData, period);
-    checkAndRecordYearlyData(currentSnobolPrice, normalizedPrice);
-    
-    return NextResponse.json({
-      actualPrice: fallbackPrice,
-      normalizedPrice: normalizedPrice,
-      baselinePrice: baselinePrice,
-      currentSnobolPrice: currentSnobolPrice,
-      updatedData: updatedData,
-      source: 'fallback',
-      timestamp: new Date().toISOString()
-    });
+    // If Yahoo Finance fails, propagate service unavailable (no stale data)
+    return NextResponse.json({ error: 'S&P 500 price unavailable' }, { status: 503 });
 
   } catch (error) {
     console.error('S&P 500 price fetch error:', error);
     
-    // Return fallback price on error
-    const fallbackPrice = 6713.71;
-    const baselinePrice = 1697.48;
-    const normalizedPrice = fallbackPrice / baselinePrice;
-    
-    // Get current Snobol price from admin panel
-    let currentSnobolPrice = 18.49; // Default fallback
-    try {
-      const priceResponse = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/api/price`);
-      const priceData = await priceResponse.json();
-      if (priceData.currentPrice) {
-        currentSnobolPrice = priceData.currentPrice;
-      }
-    } catch (error) {
-      console.log('Using default Snobol price:', currentSnobolPrice);
-    }
-    
-    // Update financial data even on error
-    let updatedData = addTodayData(currentSnobolPrice, normalizedPrice);
-    updatedData = filterByPeriod(updatedData, period);
-    checkAndRecordYearlyData(currentSnobolPrice, normalizedPrice);
-    
-    return NextResponse.json({
-      actualPrice: fallbackPrice,
-      normalizedPrice: normalizedPrice,
-      baselinePrice: baselinePrice,
-      currentSnobolPrice: currentSnobolPrice,
-      updatedData: updatedData,
-      source: 'error_fallback',
-      timestamp: new Date().toISOString()
-    }, { status: 200 }); // Return 200 to prevent frontend errors
+    // Propagate service unavailable on error
+    return NextResponse.json({ error: 'S&P 500 price error' }, { status: 503 });
   }
 }
