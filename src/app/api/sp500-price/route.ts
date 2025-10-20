@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { addTodayData, checkAndRecordYearlyData } from '@/utils/chartData'
+import { addTodayData, checkAndRecordYearlyData, FinancialData } from '@/utils/chartData'
 
-function filterByPeriod(updatedData: any[], period?: string) {
+function filterByPeriod(updatedData: FinancialData[], period?: string): FinancialData[] {
   if (!period) return updatedData;
   const now = new Date();
   const start = new Date(now);
@@ -16,7 +16,7 @@ function filterByPeriod(updatedData: any[], period?: string) {
     default: return updatedData;
   }
   const fromTime = start.getTime();
-  return updatedData.filter((d: any) => {
+  return updatedData.filter((d: FinancialData) => {
     const t = new Date(d.date).getTime();
     return !isNaN(t) && t >= fromTime;
   });
@@ -64,7 +64,7 @@ export async function GET(request: NextRequest) {
       
       // Update the financial data with today's data
       let updatedData = addTodayData(currentSnobolPrice, normalizedPrice);
-      updatedData = filterByPeriod(updatedData as any[], period);
+      updatedData = filterByPeriod(updatedData, period);
       
       // Check if we need to record yearly data
       checkAndRecordYearlyData(currentSnobolPrice, normalizedPrice);
@@ -99,7 +99,7 @@ export async function GET(request: NextRequest) {
     
     // Still update the financial data with fallback values
     let updatedData = addTodayData(currentSnobolPrice, normalizedPrice);
-    updatedData = filterByPeriod(updatedData as any[], period);
+    updatedData = filterByPeriod(updatedData, period);
     checkAndRecordYearlyData(currentSnobolPrice, normalizedPrice);
     
     return NextResponse.json({
@@ -134,7 +134,7 @@ export async function GET(request: NextRequest) {
     
     // Update financial data even on error
     let updatedData = addTodayData(currentSnobolPrice, normalizedPrice);
-    updatedData = filterByPeriod(updatedData as any[], period);
+    updatedData = filterByPeriod(updatedData, period);
     checkAndRecordYearlyData(currentSnobolPrice, normalizedPrice);
     
     return NextResponse.json({

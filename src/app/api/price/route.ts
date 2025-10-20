@@ -72,7 +72,8 @@ export async function GET(request: NextRequest) {
     } catch {}
 
     // Optional historical series for selected period if a table exists
-    let history: Array<{ date: string; snobol: number; sp500: number }> = [];
+    interface HistoryPoint { date: string; snobol: number; sp500: number }
+    let history: HistoryPoint[] = [];
     if (range) {
       try {
         const { data: hist } = await supabase
@@ -81,7 +82,7 @@ export async function GET(request: NextRequest) {
           .gte('date', range.from)
           .lte('date', range.to)
           .order('date', { ascending: true });
-        if (Array.isArray(hist)) history = hist as any;
+        if (Array.isArray(hist)) history = hist as HistoryPoint[];
       } catch {}
     }
 

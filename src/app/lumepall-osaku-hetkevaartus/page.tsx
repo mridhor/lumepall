@@ -1,7 +1,6 @@
 "use client";
 
 import React, { useEffect, useMemo, useState } from "react";
-import { ArrowRight } from "lucide-react";
 import {
   LineChart,
   Line,
@@ -95,7 +94,6 @@ export default function LumepallOsakuHetkevaartusPage() {
 
   useEffect(() => {
     fetchData(period);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [period]);
 
   return (
@@ -139,7 +137,9 @@ export default function LumepallOsakuHetkevaartusPage() {
               <Tooltip
                 content={({ active, payload }) => {
                   if (active && payload && payload.length) {
-                    const data = (payload[0] as any).payload as ChartDataPoint;
+                    const first = payload[0];
+                    const data = (first && 'payload' in first ? (first as { payload: ChartDataPoint }).payload : undefined);
+                    if (!data) return null;
                     const isLatest = data === chartData[chartData.length - 1];
                     const displayDate = isLatest
                       ? new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
