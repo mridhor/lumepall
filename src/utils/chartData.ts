@@ -116,3 +116,28 @@ export const getYAxisDomain = () => {
   const maxValue = Math.max(...financialData.map(item => item.snobol), 20);
   return [0, Math.ceil(maxValue)];
 };
+
+// Helper to format chart data for period-filtered server payloads
+export const formatAreaChartDataForPeriod = (
+  updatedData: { date: string; sp500: number; snobol: number }[],
+  actualSp500?: number,
+  actualSnobol?: number
+): ChartData[] => {
+  const sp500Baseline = 1697.48;
+  const snobolBaseline = 1;
+  return updatedData.map((item, index) => {
+    const year = item.date.split(", ")[1] || item.date;
+    const isLatest = index === updatedData.length - 1;
+    const aSp500 = isLatest && actualSp500 ? actualSp500 : item.sp500 * sp500Baseline;
+    const aSnobol = isLatest && typeof actualSnobol === 'number' ? actualSnobol : item.snobol * snobolBaseline;
+    return {
+      date: year,
+      fullDate: item.date,
+      sp500: aSp500 / sp500Baseline,
+      snobol: aSnobol / snobolBaseline,
+      totalSnobol: aSnobol / snobolBaseline,
+      actualSp500: aSp500,
+      actualSnobol: aSnobol
+    };
+  });
+};

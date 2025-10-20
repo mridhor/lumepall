@@ -1,7 +1,30 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { addTodayData, checkAndRecordYearlyData } from '@/utils/chartData'
 
+function filterByPeriod(updatedData: any[], period?: string) {
+  if (!period) return updatedData;
+  const now = new Date();
+  const start = new Date(now);
+  switch (period) {
+    case '1d': start.setDate(now.getDate() - 1); break;
+    case '5d': start.setDate(now.getDate() - 5); break;
+    case '7d': start.setDate(now.getDate() - 7); break;
+    case '14d': start.setDate(now.getDate() - 14); break;
+    case '1y': start.setFullYear(now.getFullYear() - 1); break;
+    case '2y': start.setFullYear(now.getFullYear() - 2); break;
+    case '5y': start.setFullYear(now.getFullYear() - 5); break;
+    default: return updatedData;
+  }
+  const fromTime = start.getTime();
+  return updatedData.filter((d: any) => {
+    const t = new Date(d.date).getTime();
+    return !isNaN(t) && t >= fromTime;
+  });
+}
+
 export async function GET(request: NextRequest) {
+  const { searchParams } = new URL(request.url)
+  const period = searchParams.get('period') || undefined
   try {
     // Using Yahoo Finance API for S&P 500 Index (^GSPC) - actual index value
     const yahooUrl = 'https://query1.finance.yahoo.com/v8/finance/chart/%5EGSPC';
@@ -40,7 +63,8 @@ export async function GET(request: NextRequest) {
       }
       
       // Update the financial data with today's data
-      const updatedData = addTodayData(currentSnobolPrice, normalizedPrice);
+      let updatedData = addTodayData(currentSnobolPrice, normalizedPrice);
+      updatedData = filterByPeriod(updatedData as any[], period);
       
       // Check if we need to record yearly data
       checkAndRecordYearlyData(currentSnobolPrice, normalizedPrice);
@@ -74,7 +98,8 @@ export async function GET(request: NextRequest) {
     }
     
     // Still update the financial data with fallback values
-    const updatedData = addTodayData(currentSnobolPrice, normalizedPrice);
+    let updatedData = addTodayData(currentSnobolPrice, normalizedPrice);
+    updatedData = filterByPeriod(updatedData as any[], period);
     checkAndRecordYearlyData(currentSnobolPrice, normalizedPrice);
     
     return NextResponse.json({
@@ -108,7 +133,8 @@ export async function GET(request: NextRequest) {
     }
     
     // Update financial data even on error
-    const updatedData = addTodayData(currentSnobolPrice, normalizedPrice);
+    let updatedData = addTodayData(currentSnobolPrice, normalizedPrice);
+    updatedData = filterByPeriod(updatedData as any[], period);
     checkAndRecordYearlyData(currentSnobolPrice, normalizedPrice);
     
     return NextResponse.json({
