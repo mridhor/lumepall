@@ -1,6 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { addTodayData, checkAndRecordYearlyData, FinancialData } from '@/utils/chartData'
 
+// Always compute fresh values and read latest price from admin API
+export const dynamic = 'force-dynamic'
+export const revalidate = 0
+
 function filterByPeriod(updatedData: FinancialData[], period?: string): FinancialData[] {
   if (!period) return updatedData;
   const now = new Date();
@@ -53,7 +57,7 @@ export async function GET(request: NextRequest) {
       // Get current Snobol price from admin panel
       let currentSnobolPrice = 18.49; // Default fallback
       try {
-        const priceResponse = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/api/price`);
+        const priceResponse = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/api/price`, { cache: 'no-store' });
         const priceData = await priceResponse.json();
         if (priceData.currentPrice) {
           currentSnobolPrice = priceData.currentPrice;
@@ -88,7 +92,7 @@ export async function GET(request: NextRequest) {
     // Get current Snobol price from admin panel
     let currentSnobolPrice = 18.49; // Default fallback
     try {
-      const priceResponse = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/api/price`);
+      const priceResponse = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/api/price`, { cache: 'no-store' });
       const priceData = await priceResponse.json();
       if (priceData.currentPrice) {
         currentSnobolPrice = priceData.currentPrice;
@@ -123,7 +127,7 @@ export async function GET(request: NextRequest) {
     // Get current Snobol price from admin panel
     let currentSnobolPrice = 18.49; // Default fallback
     try {
-      const priceResponse = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/api/price`);
+      const priceResponse = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/api/price`, { cache: 'no-store' });
       const priceData = await priceResponse.json();
       if (priceData.currentPrice) {
         currentSnobolPrice = priceData.currentPrice;

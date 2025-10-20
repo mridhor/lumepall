@@ -1,6 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabase } from '@/lib/supabase';
 
+// Always serve the freshest data from Supabase
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 // Default fallback values
 const DEFAULT_PRICE = 18.49;
 const DEFAULT_SP500_PRICE = 3.30;
