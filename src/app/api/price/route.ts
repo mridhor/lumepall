@@ -9,6 +9,12 @@ try {
   console.warn('Supabase not configured, using fallback data');
 }
 
+// Fallback: Simple in-memory storage for development
+let fallbackPriceData: { currentPrice: number | null; currentSP500Price: number } = {
+  currentPrice: null,
+  currentSP500Price: 3.30
+};
+
 // Default fallback values
 const DEFAULT_PRICE = null;
 const DEFAULT_SP500_PRICE = 3.30;
@@ -55,8 +61,8 @@ export async function GET(request: NextRequest) {
       console.log('Supabase not configured, returning fallback data');
       return NextResponse.json({
         success: true,
-        currentPrice: DEFAULT_PRICE,
-        currentSP500Price: DEFAULT_SP500_PRICE
+        currentPrice: fallbackPriceData.currentPrice,
+        currentSP500Price: fallbackPriceData.currentSP500Price
       });
     }
 
@@ -135,14 +141,16 @@ export async function POST(request: NextRequest) {
       ? (newSP500Price === 0 ? 0.01 : newSP500Price) 
       : DEFAULT_SP500_PRICE;
 
-    // If Supabase is not configured, return success without saving
+    // If Supabase is not configured, use fallback storage
     if (!supabase) {
-      console.log('Supabase not configured, cannot save price data');
+      console.log('Supabase not configured, using fallback storage');
+      fallbackPriceData.currentPrice = validatedPrice;
+      fallbackPriceData.currentSP500Price = validatedSP500Price;
       return NextResponse.json({
         success: true,
         currentPrice: validatedPrice,
         currentSP500Price: validatedSP500Price,
-        message: 'Price validated but not saved (Supabase not configured)'
+        message: 'Price saved to fallback storage (Supabase not configured)'
       });
     }
 

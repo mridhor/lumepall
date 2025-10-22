@@ -1,5 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { supabase } from '@/lib/supabase'
+
+// Check if Supabase is properly configured
+let supabase: any = null;
+try {
+  const { supabase: supabaseClient } = require('@/lib/supabase');
+  supabase = supabaseClient;
+} catch (error) {
+  console.warn('Supabase not configured for subscribers API');
+}
 
 export async function GET(request: NextRequest) {
   try {
@@ -10,6 +18,18 @@ export async function GET(request: NextRequest) {
       return NextResponse.json(
         { error: 'Unauthorized' },
         { status: 401 }
+      )
+    }
+
+    // If Supabase is not configured, return empty subscribers
+    if (!supabase) {
+      console.log('Supabase not configured, returning empty subscribers');
+      return NextResponse.json(
+        { 
+          subscribers: [],
+          total: 0
+        },
+        { status: 200 }
       )
     }
 

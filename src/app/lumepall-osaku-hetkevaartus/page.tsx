@@ -76,7 +76,7 @@ export default function LumepallOsakuHetkevaartusPage() {
             ? sp500Data.actualPrice
             : item.sp500 * sp500Baseline;
           const actualSnobol = isLatest
-            ? priceData.currentPrice
+            ? (priceData.currentPrice ?? sp500Data.currentSnobolPrice ?? 18.49)
             : item.snobol * snobolBaseline;
           return {
             date: year,
@@ -90,8 +90,10 @@ export default function LumepallOsakuHetkevaartusPage() {
       );
 
       setChartData(updatedFormatted);
-      setCurrentPrice(priceData.currentPrice ?? 18.49);
-      setExactValue(priceData.exactValue ?? priceData.currentPrice ?? null);
+      // Use current price from price API, or fall back to SP500 API's currentSnobolPrice, or default
+      const currentPriceValue = priceData.currentPrice ?? sp500Data.currentSnobolPrice ?? 18.49;
+      setCurrentPrice(currentPriceValue);
+      setExactValue(priceData.exactValue ?? priceData.currentPrice ?? currentPriceValue);
       setEquity(priceData.totalEquity ?? null);
     } catch (e) {
       console.error("Failed to load page data", e);
@@ -107,6 +109,39 @@ export default function LumepallOsakuHetkevaartusPage() {
 
   useEffect(() => {
     fetchData(period);
+  }, [period]);
+
+  // Listen for price updates from admin panel
+  useEffect(() => {
+    const handlePriceUpdate = () => {
+      console.log('Price update detected, refreshing data...');
+      fetchData(period);
+    };
+
+    // Listen for BroadcastChannel messages
+    const channel = new BroadcastChannel('price-updates');
+    channel.addEventListener('message', (event) => {
+      if (event.data === 'price-changed') {
+        handlePriceUpdate();
+      }
+    });
+
+    // Listen for localStorage changes (fallback)
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === 'priceUpdate') {
+        handlePriceUpdate();
+      }
+    };
+    window.addEventListener('storage', handleStorageChange);
+
+    // Listen for custom events (fallback)
+    window.addEventListener('priceUpdated', handlePriceUpdate);
+
+    return () => {
+      channel.close();
+      window.removeEventListener('storage', handleStorageChange);
+      window.removeEventListener('priceUpdated', handlePriceUpdate);
+    };
   }, [period]);
 
   return (
@@ -189,10 +224,9 @@ export default function LumepallOsakuHetkevaartusPage() {
         </div>
 
         {/* Live value pills like minimal chips */}
-        <div className="mt-4 grid grid-cols-1 gap-2 sm:grid-cols-3 text-center">
+        <div className="mt-4 grid grid-cols-1 gap-2 sm:grid-cols-2 text-center">
           <div className="px-4 py-1 rounded-full border border-neutral-200 text-sm">Osaku tänane väärtus, <span className="font-medium">1,79 EUR</span></div>
           <div className="px-4 py-1 rounded-full border border-neutral-200 text-sm">Fondi omakapital, <span className="font-medium">2 141 434,13 EUR</span></div>
-          <div className="px-4 py-1 rounded-full border border-neutral-200 text-sm">Periood, <span className="font-medium">1 päev</span></div>
         </div>
 
         {/* Email capture, keep minimal like Snöbol, optional */}

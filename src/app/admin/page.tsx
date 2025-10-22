@@ -34,6 +34,7 @@ export default function AdminDashboard() {
       const response = await fetch('/api/admin/subscribers');
       
       if (response.status === 401) {
+        console.log('Not authenticated, redirecting to login');
         router.push('/admin/login');
         return;
       }
@@ -43,11 +44,14 @@ export default function AdminDashboard() {
       if (response.ok) {
         setSubscribers(data.subscribers || []);
         setTotal(data.total || 0);
+        setError(''); // Clear any previous errors
       } else {
+        console.error('API error:', data.error);
         setError(data.error || 'Failed to fetch subscribers');
       }
-    } catch {
-      setError('Something went wrong. Please try again.');
+    } catch (error) {
+      console.error('Fetch subscribers error:', error);
+      setError('Network error. Please check your connection and try again.');
     } finally {
       setLoading(false);
     }
@@ -60,11 +64,14 @@ export default function AdminDashboard() {
       
       if (response.ok) {
         setPriceData(data);
+        setPriceError(''); // Clear any previous errors
       } else {
+        console.error('Price API error:', data.error);
         setPriceError(data.error || 'Failed to fetch price data');
       }
-    } catch {
-      setPriceError('Failed to fetch price data');
+    } catch (error) {
+      console.error('Price fetch error:', error);
+      setPriceError('Network error. Please check your connection and try again.');
     }
   }, []);
 
