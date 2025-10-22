@@ -1,5 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { supabase } from '@/lib/supabase';
+
+// Check if Supabase is properly configured
+let supabase: any = null;
+try {
+  const { supabase: supabaseClient } = require('@/lib/supabase');
+  supabase = supabaseClient;
+} catch (error) {
+  console.warn('Supabase not configured, using fallback data');
+}
 
 // Default fallback values
 const DEFAULT_PRICE = null;
@@ -41,6 +49,16 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
     const period = searchParams.get('period') || undefined;
     const range = getDateRange(period || undefined);
+
+    // If Supabase is not configured, return fallback data
+    if (!supabase) {
+      console.log('Supabase not configured, returning fallback data');
+      return NextResponse.json({
+        success: true,
+        currentPrice: DEFAULT_PRICE,
+        currentSP500Price: DEFAULT_SP500_PRICE
+      });
+    }
 
     // Fetch current prices from Supabase
     const { data, error } = await supabase
@@ -116,6 +134,17 @@ export async function POST(request: NextRequest) {
     const validatedSP500Price = typeof newSP500Price === 'number' && newSP500Price >= 0 
       ? (newSP500Price === 0 ? 0.01 : newSP500Price) 
       : DEFAULT_SP500_PRICE;
+
+    // If Supabase is not configured, return success without saving
+    if (!supabase) {
+      console.log('Supabase not configured, cannot save price data');
+      return NextResponse.json({
+        success: true,
+        currentPrice: validatedPrice,
+        currentSP500Price: validatedSP500Price,
+        message: 'Price validated but not saved (Supabase not configured)'
+      });
+    }
 
     // Check if a record exists
     const { data: existingData, error: fetchError } = await supabase

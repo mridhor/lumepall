@@ -52,6 +52,14 @@ export default function LumepallOsakuHetkevaartusPage() {
         fetch(`/api/price?period=${selected}`, { cache: "no-store" })
       ]);
 
+      // Check if responses are ok before parsing JSON
+      if (!sp500Res.ok) {
+        throw new Error(`SP500 API error: ${sp500Res.status}`);
+      }
+      if (!priceRes.ok) {
+        throw new Error(`Price API error: ${priceRes.status}`);
+      }
+
       const [sp500Data, priceData] = await Promise.all([
         sp500Res.json(),
         priceRes.json()
@@ -87,6 +95,11 @@ export default function LumepallOsakuHetkevaartusPage() {
       setEquity(priceData.totalEquity ?? null);
     } catch (e) {
       console.error("Failed to load page data", e);
+      // Set fallback data if API fails
+      setCurrentPrice(18.49);
+      setExactValue(null);
+      setEquity(null);
+      setChartData([]);
     } finally {
       setLoading(false);
     }
@@ -130,8 +143,13 @@ export default function LumepallOsakuHetkevaartusPage() {
         </div>
 
         <div className="w-full h-60 md:h-[40vh]">
-          <ResponsiveContainer width="100%" height="100%">
-            <LineChart data={chartData} margin={{ top: 5, right: 5, left: 5, bottom: 5 }}>
+          {loading ? (
+            <div className="flex items-center justify-center h-full">
+              <div className="text-gray-500">Loading chart data...</div>
+            </div>
+          ) : (
+            <ResponsiveContainer width="100%" height="100%">
+              <LineChart data={chartData} margin={{ top: 5, right: 5, left: 5, bottom: 5 }}>
               <XAxis dataKey="date" axisLine={false} tickLine={false} tick={false} hide />
               <YAxis axisLine={false} tickLine={false} tick={false} hide />
               <Tooltip
@@ -162,7 +180,8 @@ export default function LumepallOsakuHetkevaartusPage() {
               <Line type="monotone" dataKey="sp500" stroke="#E5E5E5" strokeWidth={2} dot={false} activeDot={{ r: 3, fill: "transparent", stroke: "transparent" }} />
               <Line type="monotone" dataKey="totalSnobol" stroke="#000000" strokeWidth={2} dot={false} activeDot={{ r: 4.5, fill: "white", stroke: "black", strokeWidth: 3.1 }} />
             </LineChart>
-          </ResponsiveContainer>
+            </ResponsiveContainer>
+          )}
         </div>
 
         <div className="text-sm mt-3" style={{ fontFamily: 'Avenir Light', fontWeight: 300 }}>
