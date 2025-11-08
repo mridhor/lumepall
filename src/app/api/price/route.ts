@@ -1,16 +1,26 @@
 import { NextRequest, NextResponse } from 'next/server';
+import type { SupabaseClient } from '@supabase/supabase-js';
 
-// Check if Supabase is properly configured
-let supabase: any = null;
-try {
-  const { supabase: supabaseClient } = require('@/lib/supabase');
-  supabase = supabaseClient;
-} catch (error) {
-  console.warn('Supabase not configured, using fallback data');
+let cachedSupabase: SupabaseClient | null | undefined;
+
+async function getSupabaseClient(): Promise<SupabaseClient | null> {
+  if (cachedSupabase !== undefined) {
+    return cachedSupabase;
+  }
+
+  try {
+    const { supabase } = await import('@/lib/supabase');
+    cachedSupabase = supabase;
+  } catch (_error) {
+    console.warn('Supabase not configured, using fallback data');
+    cachedSupabase = null;
+  }
+
+  return cachedSupabase ?? null;
 }
 
 // Fallback: Simple in-memory storage for development
-let fallbackPriceData: { currentPrice: number | null; currentSP500Price: number } = {
+const fallbackPriceData: { currentPrice: number | null; currentSP500Price: number } = {
   currentPrice: null,
   currentSP500Price: 3.30
 };
@@ -57,6 +67,7 @@ export async function GET(request: NextRequest) {
     const range = getDateRange(period || undefined);
 
     // If Supabase is not configured, return fallback data
+    const supabase = await getSupabaseClient();
     if (!supabase) {
       console.log('Supabase not configured, returning fallback data');
       return NextResponse.json({
@@ -142,6 +153,7 @@ export async function POST(request: NextRequest) {
       : DEFAULT_SP500_PRICE;
 
     // If Supabase is not configured, use fallback storage
+    const supabase = await getSupabaseClient();
     if (!supabase) {
       console.log('Supabase not configured, using fallback storage');
       fallbackPriceData.currentPrice = validatedPrice;

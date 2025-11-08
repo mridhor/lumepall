@@ -58,7 +58,7 @@ export async function GET(request: NextRequest) {
         if (priceData.currentPrice) {
           currentSnobolPrice = priceData.currentPrice;
         }
-      } catch (error) {
+      } catch (_error) {
         console.log('Using default Snobol price:', currentSnobolPrice);
       }
       
@@ -93,7 +93,7 @@ export async function GET(request: NextRequest) {
       if (priceData.currentPrice) {
         currentSnobolPrice = priceData.currentPrice;
       }
-    } catch (error) {
+    } catch (_error) {
       console.log('Using default Snobol price:', currentSnobolPrice);
     }
     
@@ -128,7 +128,7 @@ export async function GET(request: NextRequest) {
       if (priceData.currentPrice) {
         currentSnobolPrice = priceData.currentPrice;
       }
-    } catch (error) {
+    } catch (_error) {
       console.log('Using default Snobol price:', currentSnobolPrice);
     }
     

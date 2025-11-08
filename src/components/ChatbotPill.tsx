@@ -476,18 +476,6 @@ const ChatbotPill = forwardRef<ChatbotPillRef>((props, ref) => {
         window.scrollTo(0, scrollY);
       };
       
-      // Also restore scroll when analysis completes (not just when closing)
-      const restoreScrollOnCompletion = () => {
-        if (!isLoading && !isStreaming) {
-          // Small delay to ensure everything is rendered
-          setTimeout(() => {
-            document.body.classList.remove('no-scroll');
-            document.body.style.top = '';
-            document.documentElement.style.overflow = '';
-          }, 100);
-        }
-      };
-      
       return cleanup;
     }
   }, [isOpen]);

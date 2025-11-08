@@ -1,12 +1,22 @@
 import { NextRequest, NextResponse } from 'next/server'
+import type { SupabaseClient } from '@supabase/supabase-js'
 
-// Check if Supabase is properly configured
-let supabase: any = null;
-try {
-  const { supabase: supabaseClient } = require('@/lib/supabase');
-  supabase = supabaseClient;
-} catch (error) {
-  console.warn('Supabase not configured for subscribers API');
+let cachedSupabase: SupabaseClient | null | undefined
+
+async function getSupabaseClient(): Promise<SupabaseClient | null> {
+  if (cachedSupabase !== undefined) {
+    return cachedSupabase
+  }
+
+  try {
+    const { supabase } = await import('@/lib/supabase')
+    cachedSupabase = supabase
+  } catch (_error) {
+    console.warn('Supabase not configured for subscribers API')
+    cachedSupabase = null
+  }
+
+  return cachedSupabase ?? null
 }
 
 export async function GET(request: NextRequest) {
@@ -22,6 +32,7 @@ export async function GET(request: NextRequest) {
     }
 
     // If Supabase is not configured, return empty subscribers
+    const supabase = await getSupabaseClient()
     if (!supabase) {
       console.log('Supabase not configured, returning empty subscribers');
       return NextResponse.json(

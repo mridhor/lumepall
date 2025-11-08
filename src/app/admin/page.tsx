@@ -75,35 +75,6 @@ export default function AdminDashboard() {
     }
   }, []);
 
-  const updatePrice = async (field: 'currentPrice' | 'currentSP500Price', value: number) => {
-    setPriceLoading(true);
-    setPriceError('');
-    
-    try {
-      const response = await fetch('/api/price', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          [field]: value
-        }),
-      });
-      
-      const data = await response.json();
-      
-      if (response.ok) {
-        setPriceData(prev => ({ ...prev, [field]: value }));
-      } else {
-        setPriceError(data.error || 'Failed to update price');
-      }
-    } catch {
-      setPriceError('Failed to update price');
-    } finally {
-      setPriceLoading(false);
-    }
-  };
-
   const handlePriceChange = (field: 'currentPrice' | 'currentSP500Price', value: string) => {
     // Allow typing any value, including empty string and partial numbers
     // Don't convert to number immediately - let user type freely
@@ -157,7 +128,7 @@ export default function AdminDashboard() {
           channel.postMessage('price-changed');
           channel.close();
           console.log('Price update notification sent via BroadcastChannel');
-        } catch (error) {
+        } catch (_error) {
           console.log('BroadcastChannel not supported, using fallback');
         }
         

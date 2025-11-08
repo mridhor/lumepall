@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { ArrowRight, Loader2, X } from "lucide-react";
 import {
   LineChart,
@@ -15,13 +15,6 @@ import Image from "next/image";
 import snobolLogo from "./snobol-ai-logo.png";
 // import ChatbotPill, { ChatbotPillRef } from "@/components/ChatbotPill";
 
-// Reusable donut period component
-const DonutPeriod = () => (
-  <span 
-    className="inline-block rounded-[80%] border-[1.5px] sm:border-[1.5px] md:border-[1.8px] border-current bg-transparent ml-[0.1em] w-[0.3em] h-[0.3em] md:w-[0.26em] md:h-[0.26em] lg:w-[0.26em] lg:h-[0.26em]"
-  ></span>
-);
-
 // Ultra-simple 2-line chart component - optimized to prevent re-renders
 interface SimpleLineChartProps {
   currentPrice?: number;
@@ -29,9 +22,6 @@ interface SimpleLineChartProps {
 }
 
 const SimpleLineChart = React.memo(function SimpleLineChart({ currentPrice = 18.49 }: SimpleLineChartProps) {
-  const [sp500Price, setSp500Price] = useState<number>(3.30);
-  const [snobolPrice, setSnobolPrice] = useState<number>(currentPrice);
-
   const [chartData, setChartData] = useState<ChartData[]>(() => {
     // Initialize with default data from chartData.ts
     return formatAreaChartData();
@@ -80,7 +70,6 @@ const SimpleLineChart = React.memo(function SimpleLineChart({ currentPrice = 18.
         
         if (isMounted) {
           setChartData(updatedFormattedData);
-          setSnobolPrice(priceData.currentPrice);
         }
       } catch (error) {
         console.error('Failed to fetch prices:', error);
