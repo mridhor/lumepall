@@ -696,7 +696,7 @@ export default function Homepage() {
         {/* Manifesto Section */}
         <div id="manifesto">
           <h2 className="manifesto-title">
-            MANIFEST
+            MANIFESTO
           </h2>
           
           <div className="manifesto-content">

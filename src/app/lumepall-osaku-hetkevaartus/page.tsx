@@ -291,7 +291,7 @@ export default function LumepallOsakuHetkevaartusPage() {
 
       {/* Content sections, reuse OLD Lumepall content but laid out in the new aesthetic */}
       <div className="max-w-3xl mx-auto px-6 pb-6">
-        <h2 className="text-xs tracking-[0.35em] text-neutral-500 text-center">SELgitused</h2>
+        <h2 className="text-xs tracking-[0.35em] text-neutral-500 text-center">SELGITUSED</h2>
         <h3 className="mt-2 text-center text-lg">Kuidas Lumepall aitab rahaliselt vabaks saada?</h3>
         <div className="mt-6 space-y-5 text-[15px] leading-7 text-neutral-800">
           <div className="flex gap-4">
