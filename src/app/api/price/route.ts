@@ -21,12 +21,12 @@ async function getSupabaseClient(): Promise<SupabaseClient | null> {
 
 // Fallback: Simple in-memory storage for development
 const fallbackPriceData: { currentPrice: number | null; currentSP500Price: number } = {
-  currentPrice: null,
+  currentPrice: 18.49,
   currentSP500Price: 3.30
 };
 
 // Default fallback values
-const DEFAULT_PRICE = null;
+const DEFAULT_PRICE = 18.49;
 const DEFAULT_SP500_PRICE = 3.30;
 
 function getDateRange(period?: string) {

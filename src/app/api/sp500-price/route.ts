@@ -25,6 +25,7 @@ function filterByPeriod(updatedData: FinancialData[], period?: string): Financia
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url)
   const period = searchParams.get('period') || undefined
+  const origin = new URL(request.url).origin
   try {
     // Using Yahoo Finance API for S&P 500 Index (^GSPC) - actual index value
     const yahooUrl = 'https://query1.finance.yahoo.com/v8/finance/chart/%5EGSPC';
@@ -53,7 +54,7 @@ export async function GET(request: NextRequest) {
       // Get current Snobol price from admin panel
       let currentSnobolPrice = 18.49; // Default fallback
       try {
-        const priceResponse = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/api/price`);
+        const priceResponse = await fetch(`${origin}/api/price`);
         const priceData = await priceResponse.json();
         if (priceData.currentPrice) {
           currentSnobolPrice = priceData.currentPrice;
@@ -88,7 +89,7 @@ export async function GET(request: NextRequest) {
     // Get current Snobol price from admin panel
     let currentSnobolPrice = 18.49; // Default fallback
     try {
-      const priceResponse = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/api/price`);
+      const priceResponse = await fetch(`${origin}/api/price`);
       const priceData = await priceResponse.json();
       if (priceData.currentPrice) {
         currentSnobolPrice = priceData.currentPrice;
@@ -123,7 +124,7 @@ export async function GET(request: NextRequest) {
     // Get current Snobol price from admin panel
     let currentSnobolPrice = 18.49; // Default fallback
     try {
-      const priceResponse = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/api/price`);
+      const priceResponse = await fetch(`${origin}/api/price`);
       const priceData = await priceResponse.json();
       if (priceData.currentPrice) {
         currentSnobolPrice = priceData.currentPrice;
