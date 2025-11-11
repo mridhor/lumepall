@@ -742,11 +742,6 @@ export default function Homepage() {
             <p className="signature-date">Oktoober 2025, Alaskan Way — Seattle, WA</p>
           </div>
           
-          {/* Copyright */}
-          <div className="copyright">
-            <p>© Lumepall OÜ {new Date().getFullYear()}</p>
-          </div>
-          
           {/* Footer with Social Media and Contact */}
           <div className="manifesto-footer">
             {/* Social Media Icons */}
@@ -777,6 +772,7 @@ export default function Homepage() {
             <div className="contact-info">
               <p>Kirjuta meile numbril +372 600 3355 või e-posti aadressil info@lumepall.ee</p>
             </div>
+          <p className="mt-6 text-xs text-neutral-500">©{new Date().getFullYear()} Blond Finance OÜ</p>
           </div>
         </div>
 
