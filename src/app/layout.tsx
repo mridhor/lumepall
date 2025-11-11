@@ -13,8 +13,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Snobol - Humanitarian Al Fund Manager",
-  description: "Snobol invests in various crisis",
+  title: "Lumepall - fond varasema nimega Snobol fond",
+  description: "Lumepall fond varasema nimega Snobol fond",
   viewport: {
     width: "device-width",
     initialScale: 1,
@@ -23,26 +23,26 @@ export const metadata: Metadata = {
     viewportFit: "cover",
   },
   openGraph: {
-    title: "Snobol - Humanitarian Al Fund Manager",
-    description: "Snobol invests in various crisis",
-    url: "https://snobol.ai",
-    siteName: "Snobol AI",
+    title: "Lumepall - fond varasema nimega Snobol fond",
+    description: "Lumepall fond varasema nimega Snobol fond",
+    url: "https://lumepall.ee",
+    siteName: "Lumepall",
     images: [
       {
-        url: "/snobol-og-image.png",
+        url: "/lumepall-ogi.png",
         width: 1200,
         height: 630,
-        alt: "Snobol - Humanitarian Al Fund Manager",
+        alt: "Lumepall - fond varasema nimega Snobol fond",
       },
     ],
-    locale: "en_US",
+    locale: "ee_EE",
     type: "website",
   },
   twitter: {
     card: "summary_large_image",
-    title: "Snobol - Humanitarian Al Fund Manager",
-    description: "Snobol invests in various crisis",
-    images: ["/snobol-og-image.png"],
+    title: "Lumepall - fond varasema nimega Snobol fond",
+    description: "Lumepall fond varasema nimega Snobol fond",
+    images: ["/lumepall-ogi.png"],
   },
 };
 

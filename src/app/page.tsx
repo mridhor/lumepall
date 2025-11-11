@@ -12,7 +12,7 @@ import {
 } from "recharts";
 import { formatAreaChartData, type ChartData } from "@/utils/chartData";
 import Image from "next/image";
-import snobolLogo from "./snobol-ai-logo.png";
+import snobolLogo from "./lumepall.png";
 // import ChatbotPill, { ChatbotPillRef } from "@/components/ChatbotPill";
 
 // Ultra-simple 2-line chart component - optimized to prevent re-renders
