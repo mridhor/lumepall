@@ -44,25 +44,23 @@ const SimpleLineChart = React.memo(function SimpleLineChart({ currentPrice = 1.0
           priceResponse.json()
         ]);
         
-        // Use the updated data from the API (which includes today's data)
-        // The API has already updated chartData.ts via addTodayData()
+        // Use the updated data from the API (already normalized for both series)
         const sp500Baseline = 1697.48;
-        const snobolBaseline = 1;
         
         const updatedFormattedData = sp500Data.updatedData.map((item: { date: string; sp500: number; snobol: number }, index: number) => {
           const year = item.date.split(", ")[1];
           const isLatestPoint = index === sp500Data.updatedData.length - 1;
           
-          // For the latest point, use real-time actual prices from APIs
+          // Use API-provided values for both lines (API ensures normalization)
           const actualSp500 = isLatestPoint ? sp500Data.actualPrice : (item.sp500 * sp500Baseline);
-          const actualSnobol = isLatestPoint ? priceData.currentPrice : (item.snobol * snobolBaseline);
+          const actualSnobol = item.snobol;
           
           return {
             date: year,
             fullDate: item.date,
             sp500: actualSp500 / sp500Baseline,      // Normalized S&P 500 for chart line
-            snobol: actualSnobol / snobolBaseline,   // Normalized Snobol for chart line
-            totalSnobol: actualSnobol / snobolBaseline, // Same as snobol for chart display
+            snobol: actualSnobol,                    // Snobol already normalized (1..1.0613)
+            totalSnobol: actualSnobol,               // Same as snobol for chart display
             actualSp500: actualSp500,                 // Actual S&P 500 price for tooltip
             actualSnobol: actualSnobol                // Actual Snobol price for tooltip
           };

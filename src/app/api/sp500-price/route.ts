@@ -14,6 +14,18 @@ async function getSupabaseClient(): Promise<SupabaseClient | null> {
   return cachedSupabase ?? null
 }
 
+function getNormalizationBounds(): { min: number; max: number } {
+  const minEnv = Number(process.env.SNOBOL_NORMAL_MIN)
+  const maxEnv = Number(process.env.SNOBOL_NORMAL_MAX)
+  const min = Number.isFinite(minEnv) ? minEnv : 1
+  const max = Number.isFinite(maxEnv) ? maxEnv : 1.0613
+  // Ensure sane ordering
+  if (min >= max) {
+    return { min: 1, max: 1.0613 }
+  }
+  return { min, max }
+}
+
 function filterByPeriod(updatedData: FinancialData[], period?: string): FinancialData[] {
   if (!period) return updatedData;
   const now = new Date();
@@ -40,6 +52,7 @@ export async function GET(request: NextRequest) {
   const period = searchParams.get('period') || undefined
   const origin = new URL(request.url).origin
   try {
+    const { min: normalMin, max: normalMax } = getNormalizationBounds()
     // Prefer Supabase historical snobol series
     const supabase = await getSupabaseClient()
     let sbFinancialData: FinancialData[] | null = null
@@ -112,7 +125,7 @@ export async function GET(request: NextRequest) {
       const normalizedPrice = actualPrice / baselinePrice;
       
       // Get current Snobol price from admin panel
-      let currentSnobolPrice = 18.49; // Default fallback
+      let currentSnobolPrice = 1.0613; // Default fallback
       try {
         const priceResponse = await fetch(`${origin}/api/price`);
         const priceData = await priceResponse.json();
@@ -151,16 +164,18 @@ export async function GET(request: NextRequest) {
         baseData = baseData.slice(0, -1);
       }
 
-      // Append today's point using live actuals
+      // Append today's point using configured normalized scale
       const today = new Date();
       const formattedToday = today.toLocaleDateString('en-US', {
         month: 'short',
         day: 'numeric',
         year: 'numeric',
       });
+      // Ensure today's Snobol stays in normalized range
+      const normalizedTodaySnobol = Math.min(Math.max(currentSnobolPrice, normalMin), normalMax);
       const withToday: FinancialData[] = [
         ...baseData.filter((d) => d.date !== formattedToday),
-        { date: formattedToday, snobol: currentSnobolPrice, sp500: normalizedPrice },
+        { date: formattedToday, snobol: normalizedTodaySnobol, sp500: normalizedPrice },
       ];
 
       let updatedData = withToday;
@@ -186,7 +201,7 @@ export async function GET(request: NextRequest) {
     const normalizedPrice = fallbackPrice / baselinePrice;
     
     // Get current Snobol price from admin panel
-    let currentSnobolPrice = 18.49; // Default fallback
+    let currentSnobolPrice = 1.0613; // Default fallback
     try {
       const priceResponse = await fetch(`${origin}/api/price`);
       const priceData = await priceResponse.json();
@@ -221,7 +236,7 @@ export async function GET(request: NextRequest) {
     const normalizedPrice = fallbackPrice / baselinePrice;
     
     // Get current Snobol price from admin panel
-    let currentSnobolPrice = 18.49; // Default fallback
+    let currentSnobolPrice = 1.0613; // Default fallback
     try {
       const priceResponse = await fetch(`${origin}/api/price`);
       const priceData = await priceResponse.json();
