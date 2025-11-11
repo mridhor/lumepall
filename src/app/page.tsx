@@ -448,6 +448,16 @@ export default function Homepage() {
                   <p className="leading-tight not-italic text-xl sm:text-xl md:text-2xl lg:text-3xl text-black mb-4 sm:mb-6 md:mb-8 pr-0 xs:pr-20 " data-node-id="1:161" style={{ fontFamily: 'Avenir Light', fontWeight: 300 }}>
                     <span className="inline-block ">Lumepall osaku hetkeväärtus</span>
                   </p>
+
+                  <div className="w-full mb-4">
+                    <button
+                      type="button"
+                      className="w-full rounded-full border border-neutral-900 text-neutral-900 px-6 py-2 text-sm"
+                    >
+                      Fondi sisu
+                    </button>
+                  </div>
+
                 </div>
               </div>
               
