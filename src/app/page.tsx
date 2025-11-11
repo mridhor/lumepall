@@ -153,7 +153,7 @@ const SimpleLineChart = React.memo(function SimpleLineChart({ currentPrice = 1.7
                     <p className="text-gray-600 font-medium mb-2">{displayDate}</p>
                     <div className="space-y-1">
                       <div className="flex items-center gap-2">
-                        <span className="text-gray-700">Snobol:</span>
+                        <span className="text-gray-700">Lumepall:</span>
                         <span className="font-semibold">${data.actualSnobol?.toFixed(2)}</span>
                       </div>
                     </div>
