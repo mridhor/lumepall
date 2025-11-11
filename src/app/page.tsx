@@ -21,7 +21,7 @@ interface SimpleLineChartProps {
   currentSP500Price?: number;
 }
 
-const SimpleLineChart = React.memo(function SimpleLineChart({ currentPrice = 18.49 }: SimpleLineChartProps) {
+const SimpleLineChart = React.memo(function SimpleLineChart({ currentPrice = 1.0613 }: SimpleLineChartProps) {
   const [chartData, setChartData] = useState<ChartData[]>(() => {
     // Initialize with default data from chartData.ts
     return formatAreaChartData();
@@ -193,7 +193,7 @@ const SimpleLineChart = React.memo(function SimpleLineChart({ currentPrice = 18.
 export default function Homepage() {
  // const chatbotRef = useRef<ChatbotPillRef>(null);
   const [emailError, setEmailError] = useState(false);
-  const [priceData, setPriceData] = useState({ currentPrice: 18.49, currentSP500Price: 3.30 });
+  const [priceData, setPriceData] = useState({ currentPrice: 1.0613, currentSP500Price: 3.30 });
   const [errorMessage, setErrorMessage] = useState('');
   const [isSuccess, setIsSuccess] = useState(false);
   const [isSent, setIsSent] = useState(false);

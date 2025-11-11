@@ -34,7 +34,7 @@ const PERIOD_OPTIONS: { key: PeriodKey; label: string }[] = [
 export default function LumepallOsakuHetkevaartusPage() {
   const [period, setPeriod] = useState<PeriodKey>("1y");
   const [chartData, setChartData] = useState<ChartDataPoint[]>([]);
-  const [currentPrice, setCurrentPrice] = useState<number>(18.49);
+  const [currentPrice, setCurrentPrice] = useState<number>(1.0613);
   const [equity, setEquity] = useState<number | null>(null);
   const [exactValue, setExactValue] = useState<number | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
@@ -76,7 +76,7 @@ export default function LumepallOsakuHetkevaartusPage() {
             ? sp500Data.actualPrice
             : item.sp500 * sp500Baseline;
           const actualSnobol = isLatest
-            ? (priceData.currentPrice ?? sp500Data.currentSnobolPrice ?? 18.49)
+            ? (priceData.currentPrice ?? sp500Data.currentSnobolPrice ?? 1.0613)
             : item.snobol * snobolBaseline;
           return {
             date: year,
@@ -91,14 +91,14 @@ export default function LumepallOsakuHetkevaartusPage() {
 
       setChartData(updatedFormatted);
       // Use current price from price API, or fall back to SP500 API's currentSnobolPrice, or default
-      const currentPriceValue = priceData.currentPrice ?? sp500Data.currentSnobolPrice ?? 18.49;
+      const currentPriceValue = priceData.currentPrice ?? sp500Data.currentSnobolPrice ?? 1.0613;
       setCurrentPrice(currentPriceValue);
       setExactValue(priceData.exactValue ?? priceData.currentPrice ?? currentPriceValue);
       setEquity(priceData.totalEquity ?? null);
     } catch (e) {
       console.error("Failed to load page data", e);
       // Set fallback data if API fails
-      setCurrentPrice(18.49);
+      setCurrentPrice(1.0613);
       setExactValue(null);
       setEquity(null);
       setChartData([]);
