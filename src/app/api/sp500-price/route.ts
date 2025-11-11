@@ -27,6 +27,34 @@ export async function GET(request: NextRequest) {
   const period = searchParams.get('period') || undefined
   const origin = new URL(request.url).origin
   try {
+    // Try to load Snobol historical data from CSV
+    let csvFinancialData: FinancialData[] | null = null;
+    try {
+      const csvRes = await fetch(`${origin}/chartData.csv`);
+      if (csvRes.ok) {
+        const text = await csvRes.text();
+        const lines = text.trim().split('\n');
+        // Expect header: datetime_utc,value
+        const rows = lines.slice(1);
+        csvFinancialData = rows
+          .map((line) => {
+            const [datetimeUtc, valueStr] = line.split(',');
+            const dateObj = new Date(datetimeUtc.replace(' ', 'T') + 'Z');
+            if (isNaN(dateObj.getTime())) return null;
+            const formatted = dateObj.toLocaleDateString('en-US', {
+              month: 'short',
+              day: 'numeric',
+              year: 'numeric',
+            });
+            const snobolVal = Number(valueStr);
+            if (!isFinite(snobolVal)) return null;
+            return { date: formatted, snobol: snobolVal, sp500: 1 } as FinancialData;
+          })
+          .filter((v): v is FinancialData => Boolean(v));
+      }
+    } catch (_e) {
+      // Ignore CSV issues; we'll fall back to default utils-based data
+    }
     // Using Yahoo Finance API for S&P 500 Index (^GSPC) - actual index value
     const yahooUrl = 'https://query1.finance.yahoo.com/v8/finance/chart/%5EGSPC';
     
@@ -63,8 +91,40 @@ export async function GET(request: NextRequest) {
         console.log('Using default Snobol price:', currentSnobolPrice);
       }
       
-      // Update the financial data with today's data
-      let updatedData = addTodayData(currentSnobolPrice, normalizedPrice);
+      // Build updated financial data:
+      // - Use CSV-based Snobol series if available, otherwise use default series
+      // - For S&P 500 historical series we keep existing normalized values (use 1 as placeholder)
+      let baseData: FinancialData[] = [];
+      if (csvFinancialData && csvFinancialData.length > 0) {
+        // Deduplicate by date, keep the latest entry per date
+        const map = new Map<string, FinancialData>();
+        for (const row of csvFinancialData) {
+          map.set(row.date, row);
+        }
+        baseData = Array.from(map.values()).sort((a, b) => {
+          return new Date(a.date).getTime() - new Date(b.date).getTime();
+        });
+      } else {
+        // Fallback to existing default historical
+        // Use addTodayData to include today's point later for consistency
+        baseData = addTodayData(currentSnobolPrice, normalizedPrice);
+        // remove today's injected point to behave like historical base
+        baseData = baseData.slice(0, -1);
+      }
+
+      // Append today's point using live actuals
+      const today = new Date();
+      const formattedToday = today.toLocaleDateString('en-US', {
+        month: 'short',
+        day: 'numeric',
+        year: 'numeric',
+      });
+      const withToday: FinancialData[] = [
+        ...baseData.filter((d) => d.date !== formattedToday),
+        { date: formattedToday, snobol: currentSnobolPrice, sp500: normalizedPrice },
+      ];
+
+      let updatedData = withToday;
       updatedData = filterByPeriod(updatedData, period);
       
       // Check if we need to record yearly data
