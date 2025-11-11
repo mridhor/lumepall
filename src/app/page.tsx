@@ -448,14 +448,14 @@ export default function Homepage() {
               {/* Email Signup */}
               <div className="flex flex-col items-center mt-0 md:mt-0 lg:mt-0 xl:mt-0 pb-2 gap-2">
               <div className="text-center flex flex-col sm:flex-row items-center gap-1.5">
-                <p className="text-lg" style={{ fontFamily: 'Avenir Light', fontWeight: 300 }}>Get Snobol AI investment tips:</p>
+                <p className="text-lg" style={{ fontFamily: 'Avenir Light', fontWeight: 300 }}>Hangi Lumepalli investeerimisnõuanded</p>
                 <div className="flex justify-center items-center">
                   <div className="flex items-center gap-2">
                     <div className={`email-wrapper ${emailError ? 'error' : ''} ${isSuccess ? 'success' : ''} ${isSent ? 'sent' : ''}`}>
                       <div className="email-pill">
                       {isSent ? (
                         <div className="email-sent-content gap-1">
-                          <span className="email-sent-text">Submitted! Thank You</span>
+                          <span className="email-sent-text">Esitatud! Aitäh!</span>
                           <button 
                             type="button"
                             className="email-close-btn"
@@ -468,7 +468,7 @@ export default function Homepage() {
                       ) : (
                   <input 
                     type="email" 
-                    placeholder="Insert email." 
+                    placeholder="Sisesta e-post" 
                           className="email-input"
                         ref={(input) => {
                           if (input) {
@@ -479,7 +479,7 @@ export default function Homepage() {
                             span.style.whiteSpace = 'nowrap';
                             span.style.fontSize = '13px';
                             span.style.fontFamily = getComputedStyle(input).fontFamily;
-                            span.textContent = 'Insert email';
+                            span.textContent = 'Sisesta e-post';
                             document.body.appendChild(span);
                             
                             // Set input width and min-width to match the measured placeholder text
@@ -608,7 +608,7 @@ export default function Homepage() {
               </div>
               </div>
               <div className="relative">
-                <p className="text-sm" style={{ fontFamily: 'Avenir Light', fontWeight: 300 }}>Disclaimer: This is not investment advice.</p>
+                <p className="text-sm" style={{ fontFamily: 'Avenir Light', fontWeight: 300 }}>Lahtiütlus: tegemist ei ole investeerimisnõuga.</p>
                 {errorMessage && (
                   <div className="absolute-y-4"><div className={`email-error-message ${errorMessage ? 'show' : ''}`}>
                     {errorMessage}
@@ -624,7 +624,7 @@ export default function Homepage() {
 
         {/* Footer with Manifesto Link */}
       <div className="text-center pb-8" id="manifesto-footer">
-            <p className="text-sm sm:text-lg mb-2" style={{ fontFamily: 'Avenir Light', fontWeight: 300 }}>SNOBOL - HUMANITARIAN AI FUND MANAGER</p>
+            <p className="text-sm sm:text-lg mb-2" style={{ fontFamily: 'Avenir Light', fontWeight: 300 }}>LUMEPALL – HUMANITAARNE TEHISINTELLEKTI FONDIJUHT</p>
           <a 
             href="#" 
             className="manifesto-link underline text-base cursor-pointer"
@@ -671,55 +671,55 @@ export default function Homepage() {
         {/* Manifesto Section */}
         <div id="manifesto">
           <h2 className="manifesto-title">
-            MANIFESTO
+            MANIFEST
           </h2>
           
           <div className="manifesto-content">
             <div className="manifesto-item">
               <span className="manifesto-prefix">#1</span>
-              <span className="manifesto-text">Economic inequality is greater than ever.</span>
+              <span className="manifesto-text">Majanduslik ebavõrdsus on suurem kui kunagi varem.</span>
             </div>
             
             <div className="manifesto-item">
               <span className="manifesto-prefix">#2</span>
-              <span className="manifesto-text">Yet more than ever, ordinary people can reach financial freedom — by starting the right habits early, even at 10 or 12, and becoming free in their 20s or 30s.</span>
+              <span className="manifesto-text">Samas on tavainimestel rohkem kui kunagi varem võimalus saavutada finantsvabadus — alustades õigete harjumustega varakult, juba 10- või 12-aastaselt, ja saavutades vabaduse 20. või 30. eluaastates.</span>
             </div>
             
             <div className="manifesto-item">
               <span className="manifesto-prefix">#3</span>
-              <span className="manifesto-text">Since 2013, Snobol Research Lead Kristian Kuutok has built contrarian investment algorithm outperforming traditional investing — first in a partnership, later through an investment fund from 2021. The full track record is shown in the graph.</span>
+              <span className="manifesto-text">Alates 2013. aastast on Lumepalli uurimisjuht Kristian Kuutok loonud kontrariaanse investeerimisalgoritmi, mis on ületanud traditsioonilise investeerimise tulemused — esmalt partnerluse kaudu, hiljem alates 2021. aastast investeerimisfondi kaudu. Täielik tulemuste ajalugu on näidatud graafikul.</span>
             </div>
             
             <div className="manifesto-item">
               <span className="manifesto-prefix">#4</span>
-              <span className="manifesto-text">Snobol&apos;s mission is to build an AI Fund Manager that consistently outperforms the markets by investing through crises, not avoiding them.</span>
+              <span className="manifesto-text">Lumepall missioon on luua tehisintellektil põhinev fondijuht, mis ületab turge järjepidevalt — investeerides kriiside ajal, mitte neid vältides.</span>
             </div>
             
             <div className="manifesto-item">
               <span className="manifesto-prefix">#5</span>
-              <span className="manifesto-text">The next contrarian star investor will not be human — it will be AI.</span>
+              <span className="manifesto-text">Järgmine kontrarianne staarinvestor ei ole inimene — see on tehisintellekt.</span>
             </div>
             
             <div className="manifesto-item">
               <span className="manifesto-prefix">#6</span>
-              <span className="manifesto-text">Financial freedom is one of the deepest sources of happiness and optimism.</span>
+              <span className="manifesto-text">Finantsvabadus on üks sügavamaid õnne ja optimismi allikaid.</span>
             </div>
             
             <div className="manifesto-item">
               <span className="manifesto-prefix">#7</span>
-              <span className="manifesto-text">Our initiative is guided by Nordic values. The word &quot;snøbol&quot; means snowball in Old Swedish — a symbol of quiet, steady growth.</span>
+              <span className="manifesto-text">Meie algatust juhivad põhjamaadlikud väärtused. Sõna “snøbol” tähendab vana rootsi keeles “lumepall” — sümbolit vaiksele, järkjärgulisele kasvule.</span>
             </div>
           </div>
           
           {/* Signature Block */}
           <div className="signature-section">
             <p className="signature-name">Kristian J. Kuutok</p>
-            <p className="signature-date">October 2025, Alaskan Way — Seattle, WA</p>
+            <p className="signature-date">Oktoober 2025, Alaskan Way — Seattle, WA</p>
           </div>
           
           {/* Copyright */}
           <div className="copyright">
-            <p>© Snobol Inc. {new Date().getFullYear()}</p>
+            <p>© Lumepall OÜ {new Date().getFullYear()}</p>
           </div>
           
           {/* Footer with Social Media and Contact */}
@@ -745,12 +745,12 @@ export default function Homepage() {
           
             {/* Company Tagline */}
             <div className="company-tagline">
-              <p>SNOBOL - HUMANITARIAN AI FUND MANAGER</p>
+              <p>LUMEPALL – HUMANITAARNE TEHISINTELLEKTI FONDIJUHT</p>
             </div>
             
             {/* Contact Information */}
             <div className="contact-info">
-              <p>Text us at +1 704 200 9000 or email hello@snobol.ai</p>
+              <p>Kirjuta meile numbril +372 600 3355 või e-posti aadressil info@lumepall.ee</p>
             </div>
           </div>
         </div>
