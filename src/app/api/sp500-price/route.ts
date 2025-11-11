@@ -8,7 +8,7 @@ async function getSupabaseClient(): Promise<SupabaseClient | null> {
   try {
     const { supabase } = await import('@/lib/supabase')
     cachedSupabase = supabase
-  } catch (_e) {
+  } catch {
     cachedSupabase = null
   }
   return cachedSupabase ?? null
@@ -63,13 +63,12 @@ export async function GET(request: NextRequest) {
           .select('date,snobol')
           .order('date', { ascending: true })
         if (Array.isArray(data)) {
-          sbFinancialData = data
-            .map((r: any) => {
-              return { date: r.date as string, snobol: Number(r.snobol), sp500: 1 }
-            })
+          type DBRow = { date: string; snobol: number }
+          sbFinancialData = (data as unknown as DBRow[])
+            .map((r) => ({ date: r.date, snobol: Number(r.snobol), sp500: 1 }))
             .filter(d => d.date && isFinite(d.snobol))
         }
-      } catch (_e) {}
+      } catch {}
     }
 
     // Try to load Snobol historical data from CSV if Supabase not present
@@ -97,7 +96,7 @@ export async function GET(request: NextRequest) {
           })
           .filter((v): v is FinancialData => Boolean(v));
       }
-    } catch (_e) {
+    } catch {
       // Ignore CSV issues; we'll fall back to default utils-based data
     }
     // Using Yahoo Finance API for S&P 500 Index (^GSPC) - actual index value
@@ -132,7 +131,7 @@ export async function GET(request: NextRequest) {
         if (priceData.currentPrice) {
           currentSnobolPrice = priceData.currentPrice;
         }
-      } catch (_error) {
+      } catch {
         console.log('Using default Snobol price:', currentSnobolPrice);
       }
       
@@ -208,7 +207,7 @@ export async function GET(request: NextRequest) {
       if (priceData.currentPrice) {
         currentSnobolPrice = priceData.currentPrice;
       }
-    } catch (_error) {
+      } catch {
       console.log('Using default Snobol price:', currentSnobolPrice);
     }
     
@@ -243,7 +242,7 @@ export async function GET(request: NextRequest) {
       if (priceData.currentPrice) {
         currentSnobolPrice = priceData.currentPrice;
       }
-    } catch (_error) {
+    } catch {
       console.log('Using default Snobol price:', currentSnobolPrice);
     }
     

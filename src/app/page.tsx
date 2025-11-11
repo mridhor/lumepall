@@ -70,7 +70,21 @@ const SimpleLineChart = React.memo(function SimpleLineChart({ currentPrice = 1.7
         }
       } catch (error) {
         console.error('Failed to fetch prices:', error);
-        // Keep the default data if fetch fails
+        // If fetch fails, adjust the last point to reflect the provided currentPrice
+        if (isMounted) {
+          setChartData(prev => {
+            if (!prev || prev.length === 0) return prev;
+            const lastIdx = prev.length - 1;
+            const updated = [...prev];
+            updated[lastIdx] = {
+              ...updated[lastIdx],
+              snobol: currentPrice,
+              totalSnobol: currentPrice,
+              actualSnobol: currentPrice
+            };
+            return updated;
+          });
+        }
       }
     };
 

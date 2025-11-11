@@ -8,7 +8,7 @@ async function getSupabaseClient(): Promise<SupabaseClient | null> {
   try {
     const { supabase } = await import('@/lib/supabase')
     cachedSupabase = supabase
-  } catch (_e) {
+  } catch {
     cachedSupabase = null
   }
   return cachedSupabase ?? null
@@ -36,7 +36,7 @@ export async function POST(request: NextRequest) {
     const contentType = request.headers.get('content-type') || ''
 
     // Accept text/csv or JSON body of [{ datetime_utc, value }]
-    let rows: Array<{ date: string; snobol: number }> = []
+    const rows: Array<{ date: string; snobol: number }> = []
 
     if (contentType.includes('text/csv')) {
       const text = await request.text()
@@ -77,7 +77,7 @@ export async function POST(request: NextRequest) {
     }
 
     return NextResponse.json({ success: true, imported: rows.length })
-  } catch (e: unknown) {
+    } catch (e: unknown) {
     const message = e instanceof Error ? e.message : 'Unknown error'
     return NextResponse.json({ error: message }, { status: 500 })
   }

@@ -128,7 +128,7 @@ export default function AdminDashboard() {
           channel.postMessage('price-changed');
           channel.close();
           console.log('Price update notification sent via BroadcastChannel');
-        } catch (_error) {
+        } catch {
           console.log('BroadcastChannel not supported, using fallback');
         }
         

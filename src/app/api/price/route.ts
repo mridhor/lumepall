@@ -11,7 +11,7 @@ async function getSupabaseClient(): Promise<SupabaseClient | null> {
   try {
     const { supabase } = await import('@/lib/supabase');
     cachedSupabase = supabase;
-  } catch (_error) {
+  } catch {
     console.warn('Supabase not configured, using fallback data');
     cachedSupabase = null;
   }
