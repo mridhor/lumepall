@@ -166,44 +166,18 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    // Check if a record exists
-    const { data: existingData, error: fetchError } = await supabase
-      .from('snobol_current_price')
-      .select('id')
-      .order('id', { ascending: false })
-      .limit(1)
-      .maybeSingle();
-
-    let result;
-    if (existingData && !fetchError) {
-      // Update existing record
-      result = await supabase
-        .from('snobol_current_price')
-        .update({
-          current_price: validatedPrice,
-          current_sp500_price: validatedSP500Price,
-          updated_at: new Date().toISOString()
-        })
-        .eq('id', existingData.id)
-        .select();
-    } else {
-      // Insert new record
-      result = await supabase
-        .from('snobol_current_price')
-        .insert({
-          current_price: validatedPrice,
-          current_sp500_price: validatedSP500Price,
-          updated_at: new Date().toISOString()
-        })
-        .select();
-    }
-
-    if (result.error) {
-      console.error('Supabase error:', result.error);
-      return NextResponse.json(
-        { error: 'Failed to update price in database' },
-        { status: 500 }
-      );
+    // Also upsert today's normalized price into lumepall_history
+    const today = new Date();
+    const formattedToday = today.toLocaleDateString('en-US', {
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric',
+    });
+    const { error: upsertHistErr } = await supabase
+      .from('lumepall_history')
+      .upsert([{ date: formattedToday, snobol: validatedPrice }], { onConflict: 'date' });
+    if (upsertHistErr) {
+      console.error('Supabase lumepall_history upsert error:', upsertHistErr);
     }
     
     return NextResponse.json({

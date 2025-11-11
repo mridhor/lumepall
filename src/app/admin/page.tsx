@@ -230,7 +230,7 @@ export default function AdminDashboard() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {/* Current Price */}
               <div className="space-y-2 border-gray-200 border-sm rounded">
-                <Label htmlFor="currentPrice" className="font-semibold">Snobol Current Price</Label>
+                <Label htmlFor="currentPrice" className="font-semibold">Lumepall Current Price</Label>
                 <Input
                   id="currentPrice"
                   className="bg-white border-gray-200 border-sm rounded font-semibold"
@@ -242,7 +242,7 @@ export default function AdminDashboard() {
                   onChange={(e) => handlePriceChange('currentPrice', e.target.value)}
                   onBlur={() => handlePriceBlur('currentPrice')}
                   disabled={priceLoading}
-                  placeholder="18.49"
+                  placeholder="1.7957"
                 />
                 <p className="text-xs text-muted-foreground font-medium">Type the price value (min: 0.01, max: 9999.99)</p>
               </div>
