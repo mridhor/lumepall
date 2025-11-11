@@ -18,10 +18,10 @@ function getNormalizationBounds(): { min: number; max: number } {
   const minEnv = Number(process.env.SNOBOL_NORMAL_MIN)
   const maxEnv = Number(process.env.SNOBOL_NORMAL_MAX)
   const min = Number.isFinite(minEnv) ? minEnv : 1
-  const max = Number.isFinite(maxEnv) ? maxEnv : 1.0613
+  const max = Number.isFinite(maxEnv) ? maxEnv : 1.7957
   // Ensure sane ordering
   if (min >= max) {
-    return { min: 1, max: 1.0613 }
+    return { min: 1, max: 1.7957 }
   }
   return { min, max }
 }
@@ -125,7 +125,7 @@ export async function GET(request: NextRequest) {
       const normalizedPrice = actualPrice / baselinePrice;
       
       // Get current Snobol price from admin panel
-      let currentSnobolPrice = 1.0613; // Default fallback
+      let currentSnobolPrice = 1.7957; // Default fallback
       try {
         const priceResponse = await fetch(`${origin}/api/price`);
         const priceData = await priceResponse.json();
@@ -201,7 +201,7 @@ export async function GET(request: NextRequest) {
     const normalizedPrice = fallbackPrice / baselinePrice;
     
     // Get current Snobol price from admin panel
-    let currentSnobolPrice = 1.0613; // Default fallback
+    let currentSnobolPrice = 1.7957; // Default fallback
     try {
       const priceResponse = await fetch(`${origin}/api/price`);
       const priceData = await priceResponse.json();
@@ -236,7 +236,7 @@ export async function GET(request: NextRequest) {
     const normalizedPrice = fallbackPrice / baselinePrice;
     
     // Get current Snobol price from admin panel
-    let currentSnobolPrice = 1.0613; // Default fallback
+    let currentSnobolPrice = 1.7957; // Default fallback
     try {
       const priceResponse = await fetch(`${origin}/api/price`);
       const priceData = await priceResponse.json();

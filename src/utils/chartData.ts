@@ -379,13 +379,12 @@ export const formatAreaChartData = (): ChartData[] => {
   const sp500Baseline = 1697.48;
   
   return financialData.map(item => {
-    const year = item.date.split(", ")[1];
     // Calculate actual prices from normalized values
     const actualSp500 = item.sp500 * sp500Baseline;
     const actualSnobol = item.snobol * snobolBaseline;
     
     return {
-      date: year,
+      date: item.date,                  // Use full date for per-point hover
       fullDate: item.date,
       sp500: actualSp500 / sp500Baseline,  // Normalized S&P 500 for chart line
       snobol: item.snobol,                  // Normalized Snobol growth

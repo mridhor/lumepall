@@ -21,7 +21,7 @@ interface SimpleLineChartProps {
   currentSP500Price?: number;
 }
 
-const SimpleLineChart = React.memo(function SimpleLineChart({ currentPrice = 1.0613 }: SimpleLineChartProps) {
+const SimpleLineChart = React.memo(function SimpleLineChart({ currentPrice = 1.7957 }: SimpleLineChartProps) {
   const [chartData, setChartData] = useState<ChartData[]>(() => {
     // Initialize with default data from chartData.ts
     return formatAreaChartData();
@@ -48,7 +48,6 @@ const SimpleLineChart = React.memo(function SimpleLineChart({ currentPrice = 1.0
         const sp500Baseline = 1697.48;
         
         const updatedFormattedData = sp500Data.updatedData.map((item: { date: string; sp500: number; snobol: number }, index: number) => {
-          const year = item.date.split(", ")[1];
           const isLatestPoint = index === sp500Data.updatedData.length - 1;
           
           // Use API-provided values for both lines (API ensures normalization)
@@ -56,7 +55,7 @@ const SimpleLineChart = React.memo(function SimpleLineChart({ currentPrice = 1.0
           const actualSnobol = item.snobol;
           
           return {
-            date: year,
+            date: item.date,
             fullDate: item.date,
             sp500: actualSp500 / sp500Baseline,      // Normalized S&P 500 for chart line
             snobol: actualSnobol,                    // Snobol already normalized (1..1.0613)
@@ -183,7 +182,7 @@ const SimpleLineChart = React.memo(function SimpleLineChart({ currentPrice = 1.0
 export default function Homepage() {
  // const chatbotRef = useRef<ChatbotPillRef>(null);
   const [emailError, setEmailError] = useState(false);
-  const [priceData, setPriceData] = useState({ currentPrice: 1.0613, currentSP500Price: 3.30 });
+  const [priceData, setPriceData] = useState({ currentPrice: 1.7957, currentSP500Price: 3.30 });
   const [errorMessage, setErrorMessage] = useState('');
   const [isSuccess, setIsSuccess] = useState(false);
   const [isSent, setIsSent] = useState(false);
