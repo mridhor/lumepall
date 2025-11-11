@@ -146,7 +146,8 @@ export default function LumepallOsakuHetkevaartusPage() {
   return (
     <div className="bg-white min-h-screen flex flex-col px-4 sm:px-12 lg:px-30 pt-6">
       <div className="w-full max-w-6xl mx-auto">
-        <div className="mb-6">
+      <div className="flex flex-col sm:flex-row">
+        <div className="w-full mb-6">
           <p className="leading-tight not-italic text-xl sm:text-xl md:text-2xl lg:text-3xl text-black mb-1" style={{ fontFamily: 'Avenir Light', fontWeight: 300 }}>
             Lumepall osaku hetkeväärtus
           </p>
@@ -159,14 +160,27 @@ export default function LumepallOsakuHetkevaartusPage() {
               <div className="text-sm md:text-base text-gray-600">Fondi omakapital: {equity.toLocaleString("et-EE", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} EUR</div>
             )}
           </div>
+          </div>
+          
+
+        {/* Live value pills like minimal chips */}
+        <div className="mt-4 grid grid-rows-1 gap-2 sm:grid-rows-2 text-left">
+          <div className="px-4 py-1"> <div className="rounded-full text-sm sm:text-nowrap"> 
+            Osaku tänane väärtus: </div> <div className="font-bold text-md">1,79 EUR</div></div>
+
+          <div className="px-4 py-1"> <div className="rounded-full text-sm sm:text-nowrap"> 
+            Fondi omakapital: </div> <div className="font-bold text-md">2 141 434,13 EUR</div></div>
         </div>
+
+        </div>
+        
 
         <div className="flex items-center gap-3 mb-2">
           <label className="text-base md:text-lg text-black" style={{ fontFamily: 'Avenir Light', fontWeight: 300 }}>
             Vali periood
           </label>
           <select
-            className="border border-gray-300 rounded-md px-3 py-1 text-sm md:text-base bg-white"
+            className="border border-gray-300 rounded-[100vw] px-3 py-1 text-sm md:text-base bg-white"
             value={period}
             onChange={(e) => setPeriod(e.target.value as PeriodKey)}
           >
@@ -216,19 +230,13 @@ export default function LumepallOsakuHetkevaartusPage() {
             </ResponsiveContainer>
           )}
         </div>
-
-        <div className="text-sm mt-3" style={{ fontFamily: 'Avenir Light', fontWeight: 300 }}>
+        <div className="flex flex-col sm:flex-row">
+        <div className="w-full text-sm mt-3" style={{ fontFamily: 'Avenir Light', fontWeight: 300 }}>
           Pane tähele, et mineviku tootlus ei garanteeri tulevast tootlust.
         </div>
-
-        {/* Live value pills like minimal chips */}
-        <div className="mt-4 grid grid-cols-1 gap-2 sm:grid-cols-2 text-center">
-          <div className="px-4 py-1 rounded-full border border-neutral-200 text-sm">Osaku tänane väärtus, <span className="font-medium">1,79 EUR</span></div>
-          <div className="px-4 py-1 rounded-full border border-neutral-200 text-sm">Fondi omakapital, <span className="font-medium">2 141 434,13 EUR</span></div>
-        </div>
-
+        <div className="w-auto text-sm mt-3" style={{ fontFamily: 'Avenir Light', fontWeight: 300 }}>
         {/* Email capture, keep minimal like Snöbol, optional */}
-        <form className="mt-6 flex items-center gap-2" onSubmit={(e) => e.preventDefault()}>
+        <form className="mt-6 sm:mt-0 flex gap-2" onSubmit={(e) => e.preventDefault()}>
           <input
             className="w-64 md:w-80 rounded-full border border-neutral-300 px-4 py-2 text-sm outline-none focus:ring-2 focus:ring-neutral-200"
             placeholder="Get Lumepall AI investment tips, insert email"
@@ -237,6 +245,8 @@ export default function LumepallOsakuHetkevaartusPage() {
           <button className="rounded-full border border-neutral-900 px-4 py-2 text-sm">Subscribe</button>
         </form>
         <p className="mt-2 text-[11px] text-neutral-500">Disclaimer, This is not investment advice.</p>
+        </div>
+        </div>
 
       {/* Divider with generous whitespace */}
       <div className="max-w-5xl mx-auto px-6 mt-16 mb-6 border-t border-neutral-200" />

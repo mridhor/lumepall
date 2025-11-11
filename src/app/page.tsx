@@ -450,10 +450,10 @@ export default function Homepage() {
                     <span className="inline-block ">Lumepall osaku hetkeväärtus</span>
                   </p>
 
-                  <div className="w-full mb-4">
+                  <div className="w-auto max-w-[8vw] mb-4">
                     <Link
                       href="/lumepall-osaku-hetkevaartus"
-                      className="block w-full text-center rounded-full border border-neutral-900 text-neutral-900 px-6 py-2 text-sm"
+                      className="block w-full text-center text-nowrap rounded-full border border-neutral-900 text-neutral-900 px-2 py-2 text-md"
                     >
                       Fondi sisu
                     </Link>
