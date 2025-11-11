@@ -12,6 +12,7 @@ import {
 } from "recharts";
 import { formatAreaChartData, type ChartData } from "@/utils/chartData";
 import Image from "next/image";
+import Link from "next/link";
 import snobolLogo from "./lumepall.png";
 // import ChatbotPill, { ChatbotPillRef } from "@/components/ChatbotPill";
 
@@ -450,12 +451,12 @@ export default function Homepage() {
                   </p>
 
                   <div className="w-full mb-4">
-                    <button
-                      type="button"
-                      className="w-full rounded-full border border-neutral-900 text-neutral-900 px-6 py-2 text-sm"
+                    <Link
+                      href="/lumepall-osaku-hetkevaartus"
+                      className="block w-full text-center rounded-full border border-neutral-900 text-neutral-900 px-6 py-2 text-sm"
                     >
                       Fondi sisu
-                    </button>
+                    </Link>
                   </div>
 
                 </div>
