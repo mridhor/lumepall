@@ -1,5 +1,18 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { addTodayData, checkAndRecordYearlyData, FinancialData } from '@/utils/chartData'
+import type { SupabaseClient } from '@supabase/supabase-js'
+
+let cachedSupabase: SupabaseClient | null | undefined
+async function getSupabaseClient(): Promise<SupabaseClient | null> {
+  if (cachedSupabase !== undefined) return cachedSupabase
+  try {
+    const { supabase } = await import('@/lib/supabase')
+    cachedSupabase = supabase
+  } catch (_e) {
+    cachedSupabase = null
+  }
+  return cachedSupabase ?? null
+}
 
 function filterByPeriod(updatedData: FinancialData[], period?: string): FinancialData[] {
   if (!period) return updatedData;
@@ -27,7 +40,26 @@ export async function GET(request: NextRequest) {
   const period = searchParams.get('period') || undefined
   const origin = new URL(request.url).origin
   try {
-    // Try to load Snobol historical data from CSV
+    // Prefer Supabase historical snobol series
+    const supabase = await getSupabaseClient()
+    let sbFinancialData: FinancialData[] | null = null
+    if (supabase) {
+      try {
+        const { data } = await supabase
+          .from('lumepall_history')
+          .select('date,snobol')
+          .order('date', { ascending: true })
+        if (Array.isArray(data)) {
+          sbFinancialData = data
+            .map((r: any) => {
+              return { date: r.date as string, snobol: Number(r.snobol), sp500: 1 }
+            })
+            .filter(d => d.date && isFinite(d.snobol))
+        }
+      } catch (_e) {}
+    }
+
+    // Try to load Snobol historical data from CSV if Supabase not present
     let csvFinancialData: FinancialData[] | null = null;
     try {
       const csvRes = await fetch(`${origin}/chartData.csv`);
@@ -92,10 +124,17 @@ export async function GET(request: NextRequest) {
       }
       
       // Build updated financial data:
-      // - Use CSV-based Snobol series if available, otherwise use default series
+      // - Use Supabase-based Snobol series if available; else CSV-based; else default
       // - For S&P 500 historical series we keep existing normalized values (use 1 as placeholder)
       let baseData: FinancialData[] = [];
-      if (csvFinancialData && csvFinancialData.length > 0) {
+      if (sbFinancialData && sbFinancialData.length > 0) {
+        // Deduplicate by date (should already be unique by PK), then sort
+        const map = new Map<string, FinancialData>();
+        for (const row of sbFinancialData) map.set(row.date, row);
+        baseData = Array.from(map.values()).sort((a, b) => {
+          return new Date(a.date).getTime() - new Date(b.date).getTime();
+        });
+      } else if (csvFinancialData && csvFinancialData.length > 0) {
         // Deduplicate by date, keep the latest entry per date
         const map = new Map<string, FinancialData>();
         for (const row of csvFinancialData) {
