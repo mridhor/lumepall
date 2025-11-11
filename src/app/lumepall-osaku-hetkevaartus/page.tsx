@@ -212,7 +212,6 @@ export default function LumepallOsakuHetkevaartusPage() {
                   return null;
                 }}
               />
-              <Line type="monotone" dataKey="sp500" stroke="#E5E5E5" strokeWidth={2} dot={false} activeDot={{ r: 3, fill: "transparent", stroke: "transparent" }} />
               <Line type="monotone" dataKey="totalSnobol" stroke="#000000" strokeWidth={2} dot={false} activeDot={{ r: 4.5, fill: "white", stroke: "black", strokeWidth: 3.1 }} />
             </LineChart>
             </ResponsiveContainer>

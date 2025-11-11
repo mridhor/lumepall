@@ -165,14 +165,6 @@ const SimpleLineChart = React.memo(function SimpleLineChart({ currentPrice = 1.0
             }}
           />
           {/* S&P 500 line - light gray */}
-          <Line
-            type="monotone"
-            dataKey="sp500"
-            stroke="#E5E5E5"
-            strokeWidth={2}
-            dot={false}
-            activeDot={{ r: 3, fill: "transparent", stroke: "transparent" }}
-          />
           {/* Snobol line - black */}
           <Line
             type="monotone"
