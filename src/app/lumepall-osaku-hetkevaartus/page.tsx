@@ -9,6 +9,10 @@ import {
   ResponsiveContainer,
   Tooltip
 } from "recharts";
+import Image from "next/image";
+import Link from "next/link";
+import snobolLogo from "./lumepall.png";
+
 
 type ChartDataPoint = {
   date: string;
@@ -144,7 +148,24 @@ export default function LumepallOsakuHetkevaartusPage() {
   }, [period]);
 
   return (
-    <div className="bg-white min-h-screen flex flex-col px-4 sm:px-12 lg:px-30 pt-6">
+    <div className="bg-white min-h-screen flex flex-col px-4 sm:px-12 lg:px-30 pb-20">
+    {/* Snobol logo at the top */}
+    <div className="w-full flex justify-center px-4 md:px-12 lg:px-24 py-12 md:py-8 sm:py-2 py-0" data-name="Header" data-node-id="1:154">
+      <div className="w-full max-w-6xl">
+        <div className="flex gap-2 items-center justify-center opacity-85">
+        <Link href=".">
+          <Image
+            src={snobolLogo}
+            alt="Snobol"
+            width={120}
+            height={48}
+            className="h-8 md:h-10 w-auto"
+            priority
+          />
+          </Link>
+        </div>
+      </div>
+    </div>
       <div className="w-full max-w-6xl mx-auto">
       <div className="flex flex-col sm:flex-row">
         <div className="w-full mb-6">
