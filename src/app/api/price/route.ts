@@ -77,16 +77,16 @@ export async function GET(request: NextRequest) {
       });
     }
 
-    // Fetch current prices from Supabase
-    const { data, error } = await supabase
-      .from('snobol_current_price')
-      .select('*')
-      .order('id', { ascending: false })
+    // Fetch latest normalized price from lumepall_history
+    const { data: latestHistory, error: latestErr } = await supabase
+      .from('lumepall_history')
+      .select('date,snobol')
+      .order('date', { ascending: false })
       .limit(1)
-      .single();
+      .maybeSingle();
 
-    if (error || !data) {
-      console.log('No price data found, returning defaults');
+    if (latestErr || !latestHistory) {
+      console.log('No lumepall_history data found, returning defaults');
       return NextResponse.json({
         success: true,
         currentPrice: DEFAULT_PRICE,
@@ -123,9 +123,9 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({
       success: true,
-      currentPrice: data.current_price || DEFAULT_PRICE,
-      currentSP500Price: data.current_sp500_price || DEFAULT_SP500_PRICE,
-      exactValue: data.current_price || DEFAULT_PRICE,
+      currentPrice: Number(latestHistory.snobol) || DEFAULT_PRICE,
+      currentSP500Price: DEFAULT_SP500_PRICE,
+      exactValue: Number(latestHistory.snobol) || DEFAULT_PRICE,
       totalEquity: equity,
       history
     });
