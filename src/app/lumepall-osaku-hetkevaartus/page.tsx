@@ -212,6 +212,7 @@ export default function LumepallOsakuHetkevaartusPage() {
       style={{
         WebkitAppearance: "none",
         MozAppearance: "none",
+        borderRadius: "100px",
       }}
     >
       {PERIOD_OPTIONS.map((opt) => (
@@ -228,7 +229,7 @@ export default function LumepallOsakuHetkevaartusPage() {
   </div>
 </div>
 
-        <div className="w-full h-60 md:h-[40vh]">
+        <div className="w-full h-60 md:h-[40vh] pt-20" style={{ height: "250px" }}>
           {loading ? (
             <div className="flex items-center justify-center h-full">
               <div className="text-gray-500">Loading chart data...</div>
@@ -268,21 +269,22 @@ export default function LumepallOsakuHetkevaartusPage() {
             </ResponsiveContainer>
           )}
         </div>
-        <div className="flex flex-col sm:flex-row">
-        <div className="w-full text-sm mt-3" style={{ fontFamily: 'Avenir Light', fontWeight: 300 }}>
+        <div className="flex flex-col">
+        <div className="w-full text-sm mt-3 text-center" style={{ fontFamily: 'Avenir Light', fontWeight: 300 }}>
           Pane tähele, et mineviku tootlus ei garanteeri tulevast tootlust.
         </div>
-        <div className="w-auto text-sm mt-3" style={{ fontFamily: 'Avenir Light', fontWeight: 300 }}>
+        <div className="w-auto text-sm mt-3 py-2" style={{ fontFamily: 'Avenir Light', fontWeight: 300 }}>
         {/* Email capture, keep minimal like Snöbol, optional */}
-        <form className="mt-6 sm:mt-0 flex gap-2" onSubmit={(e) => e.preventDefault()}>
+        <form className="mt-6 sm:mt-0 flex gap-2 justify-center items-center text-center" onSubmit={(e) => e.preventDefault()}>
           <input
-            className="w-64 md:w-80 rounded-full border border-neutral-300 px-4 py-2 text-sm outline-none focus:ring-2 focus:ring-neutral-200"
+            className="w-[380px] md:w-80 rounded-full border border-neutral-300 px-4 py-2 text-sm outline-none focus:ring-2 focus:ring-neutral-200"
             placeholder="Get Lumepall AI investment tips, insert email"
             type="email"
+            style={{ borderRadius: "100px" }}
           />
           <button className="rounded-full border border-neutral-900 px-4 py-2 text-sm">Subscribe</button>
         </form>
-        <p className="mt-2 text-[11px] text-neutral-500">Disclaimer, This is not investment advice.</p>
+        <p className="mt-2 text-[11px] text-neutral-500 text-center py-1">Disclaimer, This is not investment advice.</p>
         </div>
         </div>
 
