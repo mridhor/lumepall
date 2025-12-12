@@ -53,16 +53,9 @@ export default async function RootLayout({
   children: React.ReactNode;
   params?: Promise<Record<string, string | string[]>>;
 }>) {
-  // #region agent log
-  fetch('http://127.0.0.1:7242/ingest/84b9aae2-7bb6-46af-9250-5d3c16bed33e',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'layout.tsx:49',message:'RootLayout entry',data:{hasParams:!!params,isPromise:params instanceof Promise},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'E'})}).catch(()=>{});
-  // #endregion
-  
   // In Next.js 16, params is always a Promise and must be awaited immediately
   // We await it but don't store it to prevent enumeration during serialization
   if (params) {
-    // #region agent log
-    fetch('http://127.0.0.1:7242/ingest/84b9aae2-7bb6-46af-9250-5d3c16bed33e',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'layout.tsx:56',message:'Awaiting params to prevent enumeration',data:{},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'E'})}).catch(()=>{});
-    // #endregion
     await params; // Immediately await to unwrap, but don't store the result
   }
   
