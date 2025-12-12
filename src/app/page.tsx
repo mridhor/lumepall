@@ -438,7 +438,7 @@ export default function Homepage() {
       <div className="flex-1 flex items-start justify-center px-4 sm:px-12 lg:px-30 mt-8 md:mt-0 pt:8 sm:pt-0 md:pt-12 pb-4">
         <div className="relative w-full p-2">
           <div className="content-stretch flex flex-col lg:flex-col gap-0 md:gap-10 items-left relative w-full" data-name="Container" data-node-id="1:157">
-              <div className="flex-1 px-2 max-w-full" data-name="Paragraph" data-node-id="1:158">
+              <div className="flex-1 px-2 max-w-full" data-name="Paragraph" data-node-id="1:158" style={{ height: '300px', zIndex: 400 }}>
                 <div className="bg-clip-padding border-0 border-[transparent] border-solid box-border relative w-full pr-0 md:pr-50 lg:pr-100 xl:pr-100">
                   <p className="flex flex-col leading-tight not-italic text-xl sm:text-xl md:text-2xl lg:text-3xl text-black mb-4 pr-0 xs:pr-20" data-node-id="1:159" style={{ fontFamily: 'Avenir Light', fontWeight: 300 }}>
                   <span className="inline-block md:hidden">Üheskoos rahaliselt vabaks.</span>
