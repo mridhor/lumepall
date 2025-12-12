@@ -453,7 +453,7 @@ export default function Homepage() {
                   <div className="w-auto max-w-[8vw] mb-4">
                     <Link
                       href="/lumepall-osaku-hetkevaartus"
-                      className="block w-full text-center text-nowrap rounded-full color-white z-200 border border-neutral-900 text-neutral-900 px-2 py-2 text-md"
+                      className="block w-fit text-center text-nowrap rounded-full color-white z-200 border border-neutral-900 text-neutral-900 px-3.5 py-2 text-md"
                     >
                       Fondi sisu
                     </Link>
