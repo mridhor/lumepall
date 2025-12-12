@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState, use } from "react";
 import {
   LineChart,
   Line,
@@ -35,7 +35,21 @@ const PERIOD_OPTIONS: { key: PeriodKey; label: string }[] = [
   { key: "5y", label: "5 aastat" }
 ];
 
-export default function LumepallOsakuHetkevaartusPage() {
+export default function LumepallOsakuHetkevaartusPage({
+  params,
+  searchParams,
+}: {
+  params?: Promise<Record<string, string | string[]>>;
+  searchParams?: Promise<Record<string, string | string[]>>;
+}) {
+  // Unwrap params and searchParams to prevent serialization errors in Next.js 16
+  if (params) {
+    use(params);
+  }
+  if (searchParams) {
+    use(searchParams);
+  }
+
   const [period, setPeriod] = useState<PeriodKey>("1y");
   const [chartData, setChartData] = useState<ChartDataPoint[]>([]);
   const [currentPrice, setCurrentPrice] = useState<number>(1.7957);
