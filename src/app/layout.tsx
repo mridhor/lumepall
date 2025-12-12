@@ -46,11 +46,19 @@ export const metadata: Metadata = {
   },
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
+  params,
 }: Readonly<{
   children: React.ReactNode;
+  params?: Promise<Record<string, string | string[]>> | Record<string, string | string[]>;
 }>) {
+  // Unwrap params if provided (Next.js 15 requirement)
+  // This prevents Next.js from trying to enumerate params before it's resolved
+  if (params instanceof Promise) {
+    await params;
+  }
+  
   return (
     <html lang="en">
       <head>
