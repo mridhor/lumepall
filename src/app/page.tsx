@@ -194,7 +194,13 @@ const SimpleLineChart = React.memo(function SimpleLineChart({ currentPrice = 1.7
   );
 });
 
-export default function Homepage() {
+export default function Homepage(props?: any) {
+  // #region agent log
+  if (typeof window !== 'undefined') {
+    fetch('http://127.0.0.1:7242/ingest/84b9aae2-7bb6-46af-9250-5d3c16bed33e',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'page.tsx:197',message:'Homepage entry',data:{hasProps:!!props,propKeys:props ? Object.keys(props) : []},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'D'})}).catch(()=>{});
+  }
+  // #endregion
+  
  // const chatbotRef = useRef<ChatbotPillRef>(null);
   const [emailError, setEmailError] = useState(false);
   const [priceData, setPriceData] = useState({ currentPrice: 1.7957, currentSP500Price: 3.30 });
