@@ -697,7 +697,7 @@ export default function Homepage() {
           </section>
 
           {/* SECTION 2: Manifesto */}
-          <section className="mb-16">
+          <section className="mb-16" id="manifesto">
             <h2 className="manifesto-title">
               MANIFESTO
             </h2>
@@ -742,6 +742,52 @@ export default function Homepage() {
             <div className="signature-section">
               <p className="signature-name">Kristian J. Kuutok</p>
               <p className="signature-date">October 2025, Alaskan Way — Seattle, WA</p>
+            </div>
+
+            {/* Footer with Manifesto Link */}
+            <div className="text-center pb-8" id="manifesto-footer">
+              <p className="text-sm sm:text-lg mb-2" style={{ fontFamily: 'Avenir Light', fontWeight: 300 }}>LUMEPALL – HUMANITAARNE TEHISINTELLEKTI FONDIJUHT</p>
+              <a
+                href="#"
+                className="manifesto-link underline text-base cursor-pointer"
+                style={{ fontFamily: 'Avenir Light', fontWeight: 300 }}
+                onClick={(e) => {
+                  e.preventDefault();
+                  const section = document.getElementById('manifesto');
+                  const footer = document.getElementById('manifesto-footer');
+                  const link = e.target as HTMLElement;
+
+                  if (section && footer) {
+                    const isHidden = section.style.display === 'none' || section.style.display === '';
+
+                    if (isHidden) {
+                      // Use requestAnimationFrame for smoother transitions
+                      requestAnimationFrame(() => {
+                        section.style.display = 'block';
+                        footer.style.display = 'none';
+                        link.style.display = 'none';
+                        // Scroll to position the manifesto section's top edge at the screen top
+                        const sectionRect = section.getBoundingClientRect();
+                        const currentScrollY = window.scrollY;
+                        const targetScrollY = currentScrollY + sectionRect.top;
+                        window.scrollTo({ top: targetScrollY, behavior: 'smooth' });
+                      });
+                    } else {
+                      // Use requestAnimationFrame for smoother transitions
+                      requestAnimationFrame(() => {
+                        section.style.display = 'none';
+                        footer.style.display = 'block';
+                        link.style.display = 'inline';
+                        link.textContent = 'Manifesto';
+                        // Remove smooth scrolling to reduce lag
+                        window.scrollTo({ top: 0, behavior: 'auto' });
+                      });
+                    }
+                  }
+                }}
+              >
+                Manifesto
+              </a>
             </div>
           </section>
 
