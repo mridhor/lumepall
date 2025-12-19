@@ -4,7 +4,9 @@ import React, { useState, useEffect, useMemo } from "react";
 import { ArrowRight, Loader2, X, Play } from "lucide-react";
 import {
   LineChart,
+  ComposedChart,
   Line,
+  Area,
   XAxis,
   YAxis,
   ResponsiveContainer,
@@ -158,15 +160,6 @@ const PriceGraph = React.memo(function PriceGraph({ currentPrice = 1.7957, showD
             tick={false}
             hide
           />
-          {/* Light gray vertical divider at 2021 transition */}
-          {showDivider && dividerDate && (
-            <ReferenceLine
-              x={dividerDate}
-              stroke="#d1d5db"
-              strokeWidth={1}
-              strokeDasharray="none"
-            />
-          )}
           <Tooltip
             content={({ active, payload }) => {
               if (active && payload && payload.length) {
@@ -193,6 +186,12 @@ const PriceGraph = React.memo(function PriceGraph({ currentPrice = 1.7957, showD
               }
               return null;
             }}
+          />
+          <Area
+            type="monotone"
+            dataKey="totalSnobol"
+            fill="#D1D2D3"
+            stroke="none"
           />
           <Line
             type="monotone"
@@ -317,7 +316,7 @@ const ValueGraph = React.memo(function ValueGraph({ currency }: ValueGraphProps)
       </div>
       <div className="flex-1 min-h-[200px]">
         <ResponsiveContainer width="100%" height="100%">
-          <LineChart
+          <ComposedChart
             data={displayData}
             margin={{ top: 5, right: 5, left: 5, bottom: 5 }}
           >
@@ -355,6 +354,13 @@ const ValueGraph = React.memo(function ValueGraph({ currency }: ValueGraphProps)
                 return null;
               }}
             />
+            <Area
+              type="monotone"
+              dataKey="totalSnobol"
+              fill="#D1D2D3"
+              stroke="none"
+              baseValue="dataMin"
+            />
             <Line
               type="monotone"
               dataKey="totalSnobol"
@@ -363,7 +369,7 @@ const ValueGraph = React.memo(function ValueGraph({ currency }: ValueGraphProps)
               dot={false}
               activeDot={{ r: 4.5, fill: "white", stroke: "black", strokeWidth: 3.1 }}
             />
-          </LineChart>
+          </ComposedChart>
         </ResponsiveContainer>
       </div>
     </div>
