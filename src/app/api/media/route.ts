@@ -9,6 +9,8 @@ export interface MediaItem {
   thumbnail_url?: string;
   video_url?: string;
   article_url?: string;
+  slug?: string;
+  content?: string;
   published_at: string;
   created_at: string;
   is_active: boolean;
