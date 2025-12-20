@@ -411,7 +411,18 @@ export const financialData: FinancialData[] = (() => {
   if (typeof window !== 'undefined') {
     const stored = localStorage.getItem("financialData");
     if (stored && stored.length > 0) {
-      return JSON.parse(stored);
+      try {
+        const parsed = JSON.parse(stored);
+        // Check if cached data includes 2015 data (cache invalidation)
+        const has2015Data = parsed.some((d: FinancialData) => d.date?.includes('2015'));
+        if (has2015Data && parsed.length > 100) {
+          return parsed;
+        }
+        // Clear outdated cache
+        localStorage.removeItem("financialData");
+      } catch {
+        localStorage.removeItem("financialData");
+      }
     }
   }
   // Build from embedded CSV
