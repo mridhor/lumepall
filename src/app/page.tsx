@@ -42,7 +42,12 @@ interface PriceGraphProps {
 
 const PriceGraph = React.memo(function PriceGraph({ currentPrice = 1.7957, showDivider = true }: PriceGraphProps) {
   const [chartData, setChartData] = useState<ChartData[]>(() => {
-    return formatAreaChartData();
+    // Filter to show only data from April 2021 onwards
+    const april2021Start = new Date('2021-04-01').getTime();
+    return formatAreaChartData().filter(item => {
+      const itemDate = new Date(item.fullDate).getTime();
+      return !isNaN(itemDate) && itemDate >= april2021Start;
+    });
   });
 
   // Find the index where 2021 starts (fund begins)
@@ -90,8 +95,15 @@ const PriceGraph = React.memo(function PriceGraph({ currentPrice = 1.7957, showD
           };
         });
 
+        // Filter to show only data from April 2021 onwards (fund's active period)
+        const april2021Start = new Date('2021-04-01').getTime();
+        const filteredData = updatedFormattedData.filter((item: ChartData) => {
+          const itemDate = new Date(item.fullDate).getTime();
+          return !isNaN(itemDate) && itemDate >= april2021Start;
+        });
+
         if (isMounted) {
-          setChartData(updatedFormattedData);
+          setChartData(filteredData);
         }
       } catch (error) {
         console.error('Failed to fetch prices:', error);
@@ -248,9 +260,10 @@ const ValueGraph = React.memo(function ValueGraph({ currency }: ValueGraphProps)
     const fetchData = async () => {
       setLoading(true);
       try {
+        // Fetch without period filter to get ALL historical data (2015-2025)
         const [sp500Res, priceRes] = await Promise.all([
-          fetch('/api/sp500-price?period=5y'),
-          fetch('/api/price?period=5y')
+          fetch('/api/sp500-price'),
+          fetch('/api/price')
         ]);
 
         const [sp500Data, priceData] = await Promise.all([
@@ -788,8 +801,8 @@ export default function Homepage() {
                 <button
                   onClick={() => setValueCurrency('EUR')}
                   className={`px-3 py-1 rounded-full text-sm transition-colors ${valueCurrency === 'EUR'
-                      ? 'bg-black text-white'
-                      : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                    ? 'bg-black text-white'
+                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
                     }`}
                   style={{ fontFamily: 'Avenir Light', fontWeight: 300 }}
                 >
@@ -798,8 +811,8 @@ export default function Homepage() {
                 <button
                   onClick={() => setValueCurrency('USD')}
                   className={`px-3 py-1 rounded-full text-sm transition-colors ${valueCurrency === 'USD'
-                      ? 'bg-black text-white'
-                      : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                    ? 'bg-black text-white'
+                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
                     }`}
                   style={{ fontFamily: 'Avenir Light', fontWeight: 300 }}
                 >

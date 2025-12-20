@@ -64,11 +64,17 @@ export async function GET(request: NextRequest) {
           .order('date', { ascending: true })
         if (Array.isArray(data)) {
           type DBRow = { date: string; snobol: number }
-          sbFinancialData = (data as unknown as DBRow[])
+          const parsed = (data as unknown as DBRow[])
             .map((r) => ({ date: r.date, snobol: Number(r.snobol), sp500: 1 }))
-            .filter(d => d.date && isFinite(d.snobol))
+            // Filter out zero/invalid values - only keep data with actual values
+            .filter(d => d.date && isFinite(d.snobol) && d.snobol > 0.5)
+
+          // Use Supabase data if it has valid entries
+          if (parsed.length > 50) {
+            sbFinancialData = parsed
+          }
         }
-      } catch {}
+      } catch { }
     }
 
     // Try to load Snobol historical data from CSV if Supabase not present
@@ -101,28 +107,28 @@ export async function GET(request: NextRequest) {
     }
     // Using Yahoo Finance API for S&P 500 Index (^GSPC) - actual index value
     const yahooUrl = 'https://query1.finance.yahoo.com/v8/finance/chart/%5EGSPC';
-    
+
     const response = await fetch(yahooUrl, {
       headers: {
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
       }
     });
-    
+
     if (!response.ok) {
       throw new Error(`Yahoo API error: ${response.status}`);
     }
-    
+
     const data = await response.json();
-    
+
     if (data.chart && data.chart.result && data.chart.result[0]) {
       const result = data.chart.result[0];
       const meta = result.meta;
       const actualPrice = meta.regularMarketPrice;
-      
+
       // Calculate normalized price of S&P 500 based on 8/8/2013 baseline of $1697.48
       const baselinePrice = 1697.48;
       const normalizedPrice = actualPrice / baselinePrice;
-      
+
       // Get current Snobol price from admin panel
       let currentSnobolPrice = 1.7957; // Default fallback
       try {
@@ -134,32 +140,32 @@ export async function GET(request: NextRequest) {
       } catch {
         console.log('Using default Snobol price:', currentSnobolPrice);
       }
-      
+
       // Build updated financial data:
-      // - Use Supabase-based Snobol series if available; else CSV-based; else default
-      // - For S&P 500 historical series we keep existing normalized values (use 1 as placeholder)
+      // PRIORITY: CSV first (has correct 2015-2025 values), then Supabase as fallback
       let baseData: FinancialData[] = [];
-      if (sbFinancialData && sbFinancialData.length > 0) {
-        // Deduplicate by date (should already be unique by PK), then sort
+      if (csvFinancialData && csvFinancialData.length > 0) {
+        // Use CSV data - it has complete 2015-2025 values without zeros
+        const map = new Map<string, FinancialData>();
+        for (const row of csvFinancialData) {
+          // Only keep data with non-zero values
+          if (row.snobol > 0.5) {
+            map.set(row.date, row);
+          }
+        }
+        baseData = Array.from(map.values()).sort((a, b) => {
+          return new Date(a.date).getTime() - new Date(b.date).getTime();
+        });
+      } else if (sbFinancialData && sbFinancialData.length > 0) {
+        // Fallback to Supabase data
         const map = new Map<string, FinancialData>();
         for (const row of sbFinancialData) map.set(row.date, row);
         baseData = Array.from(map.values()).sort((a, b) => {
           return new Date(a.date).getTime() - new Date(b.date).getTime();
         });
-      } else if (csvFinancialData && csvFinancialData.length > 0) {
-        // Deduplicate by date, keep the latest entry per date
-        const map = new Map<string, FinancialData>();
-        for (const row of csvFinancialData) {
-          map.set(row.date, row);
-        }
-        baseData = Array.from(map.values()).sort((a, b) => {
-          return new Date(a.date).getTime() - new Date(b.date).getTime();
-        });
       } else {
-        // Fallback to existing default historical
-        // Use addTodayData to include today's point later for consistency
+        // Last resort: use embedded data from chartData.ts
         baseData = addTodayData(currentSnobolPrice, normalizedPrice);
-        // remove today's injected point to behave like historical base
         baseData = baseData.slice(0, -1);
       }
 
@@ -179,10 +185,10 @@ export async function GET(request: NextRequest) {
 
       let updatedData = withToday;
       updatedData = filterByPeriod(updatedData, period);
-      
+
       // Check if we need to record yearly data
       checkAndRecordYearlyData(currentSnobolPrice, normalizedPrice);
-      
+
       return NextResponse.json({
         actualPrice: actualPrice,
         normalizedPrice: normalizedPrice,
@@ -193,12 +199,12 @@ export async function GET(request: NextRequest) {
         timestamp: new Date().toISOString()
       });
     }
-    
+
     // If Yahoo Finance fails, return a fallback price (last known good value)
     const fallbackPrice = 6713.71;
     const baselinePrice = 1697.48;
     const normalizedPrice = fallbackPrice / baselinePrice;
-    
+
     // Get current Snobol price from admin panel
     let currentSnobolPrice = 1.7957; // Default fallback
     try {
@@ -207,15 +213,15 @@ export async function GET(request: NextRequest) {
       if (priceData.currentPrice) {
         currentSnobolPrice = priceData.currentPrice;
       }
-      } catch {
+    } catch {
       console.log('Using default Snobol price:', currentSnobolPrice);
     }
-    
+
     // Still update the financial data with fallback values
     let updatedData = addTodayData(currentSnobolPrice, normalizedPrice);
     updatedData = filterByPeriod(updatedData, period);
     checkAndRecordYearlyData(currentSnobolPrice, normalizedPrice);
-    
+
     return NextResponse.json({
       actualPrice: fallbackPrice,
       normalizedPrice: normalizedPrice,
@@ -228,12 +234,12 @@ export async function GET(request: NextRequest) {
 
   } catch (error) {
     console.error('S&P 500 price fetch error:', error);
-    
+
     // Return fallback price on error
     const fallbackPrice = 6713.71;
     const baselinePrice = 1697.48;
     const normalizedPrice = fallbackPrice / baselinePrice;
-    
+
     // Get current Snobol price from admin panel
     let currentSnobolPrice = 1.7957; // Default fallback
     try {
@@ -245,12 +251,12 @@ export async function GET(request: NextRequest) {
     } catch {
       console.log('Using default Snobol price:', currentSnobolPrice);
     }
-    
+
     // Update financial data even on error
     let updatedData = addTodayData(currentSnobolPrice, normalizedPrice);
     updatedData = filterByPeriod(updatedData, period);
     checkAndRecordYearlyData(currentSnobolPrice, normalizedPrice);
-    
+
     return NextResponse.json({
       actualPrice: fallbackPrice,
       normalizedPrice: normalizedPrice,
