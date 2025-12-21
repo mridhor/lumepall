@@ -86,6 +86,60 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({ currentPrice, onPriceU
               <div className="text-4xl font-medium text-black">
                 {currentPrice.toFixed(4)} <span className="text-lg text-gray-500 font-normal">EUR</span>
               </div>
+              <p className="text-gray-500 text-xs mt-2">
+                Fluctuates <span className="font-medium text-gray-700">±€0.002-0.008</span> around base
+              </p>
+            </div>
+
+            {/* Fund Composition Visualization */}
+            <div className="mt-8 pt-6 border-t border-gray-200">
+              <p className="text-gray-600 text-xs uppercase tracking-wider mb-4 font-semibold">Fund Composition</p>
+
+              {(() => {
+                // Calculate values for visualization
+                const silverValueEUR = (silverTroyOunces * silverPriceUSD) / 1.08;
+                const totalFundValue = baseFundValue + silverValueEUR;
+                const silverPercentage = totalFundValue > 0 ? (silverValueEUR / totalFundValue) * 100 : 0;
+                const basePercentage = totalFundValue > 0 ? (baseFundValue / totalFundValue) * 100 : 0;
+
+                return (
+                  <div className="space-y-3">
+                    {/* Stacked Bar Chart */}
+                    <div className="h-4 w-full bg-gray-100 rounded-full overflow-hidden flex">
+                      {/* Base Fund Segment (Dark) */}
+                      <div
+                        className="h-full bg-gray-800 transition-all duration-1000 ease-out"
+                        style={{ width: `${basePercentage}%` }}
+                      ></div>
+                      {/* Silver Segment (Light) */}
+                      <div
+                        className="h-full bg-gray-300 transition-all duration-1000 ease-out"
+                        style={{ width: `${silverPercentage}%` }}
+                      ></div>
+                    </div>
+
+                    {/* Legend & Details */}
+                    <div className="grid grid-cols-2 gap-4 text-xs">
+                      <div>
+                        <div className="flex items-center gap-2 mb-1">
+                          <div className="w-2 h-2 rounded-full bg-gray-800"></div>
+                          <span className="text-gray-600 font-medium">Base Fund</span>
+                        </div>
+                        <div className="font-semibold text-base">{basePercentage.toFixed(1)}%</div>
+                        <div className="text-gray-400">€{(baseFundValue / 1000).toFixed(1)}k</div>
+                      </div>
+                      <div className="text-right">
+                        <div className="flex items-center justify-end gap-2 mb-1">
+                          <span className="text-gray-600 font-medium">Silver Asset</span>
+                          <div className="w-2 h-2 rounded-full bg-gray-300"></div>
+                        </div>
+                        <div className="font-semibold text-base">{silverPercentage.toFixed(1)}%</div>
+                        <div className="text-gray-400">€{(silverValueEUR / 1000).toFixed(1)}k</div>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })()}
             </div>
           </div>
         </div>
