@@ -3,7 +3,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { AdminPortal } from '@/components/AdminPortal';
 
 interface Subscriber {
@@ -23,7 +22,7 @@ export default function AdminDashboard() {
   const fetchSubscribers = useCallback(async () => {
     try {
       const response = await fetch('/api/admin/subscribers');
-      
+
       if (response.status === 401) {
         console.log('Not authenticated, redirecting to login');
         router.push('/admin/login');
@@ -31,7 +30,7 @@ export default function AdminDashboard() {
       }
 
       const data = await response.json();
-      
+
       if (response.ok) {
         setSubscribers(data.subscribers || []);
         setTotal(data.total || 0);
@@ -106,37 +105,33 @@ export default function AdminDashboard() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+      <div className="min-h-screen flex items-center justify-center bg-white">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-black mx-auto"></div>
-          <p className="mt-4 text-gray-600">Loading subscribers...</p>
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-black mx-auto"></div>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-white">
-      <div className="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-white text-black font-light">
+      <div className="max-w-5xl mx-auto py-12 px-6">
         {/* Header */}
-        <div className="flex justify-between items-center mb-8">
+        <div className="flex justify-between items-end mb-16">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900">Admin Dashboard</h1>
+            <h1 className="text-4xl font-light tracking-tight mb-2">Admin</h1>
+            <p className="text-gray-500 text-lg font-light">Manage fund parameters and subscribers</p>
           </div>
-          <div className="flex gap-4">
-            <Button
-              onClick={handleLogout}
-              className="cursor-pointer font-semibold"
-              variant="destructive"
-              size="sm"
-            >
-              Logout
-            </Button>
-          </div>
+          <button
+            onClick={handleLogout}
+            className="text-sm text-gray-500 hover:text-black transition-colors underline underline-offset-4"
+          >
+            Log out
+          </button>
         </div>
 
         {/* Fund Parameters Management */}
-        <div className="mb-8">
+        <div className="mb-20">
           <AdminPortal
             currentPrice={currentSharePrice}
             onPriceUpdate={handlePriceUpdate}
@@ -144,66 +139,63 @@ export default function AdminDashboard() {
         </div>
 
         {error && (
-          <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded mb-6 font-medium">
+          <div className="bg-red-50 text-red-600 px-4 py-3 rounded mb-8 text-sm">
             {error}
           </div>
         )}
 
-        {/* Subscribers Table */}
-        <Card className="overflow-hidden border-gray-200 bg-white">
-          <CardHeader className="border-b border-gray-200 bg-white flex flex-row justify-between items-center">
-            <CardTitle className="text-lg font-bold">Email Subscribers ({total})</CardTitle>
-            <div className="flex flex-row gap-2">
-            <Button
+        {/* Subscribers Section */}
+        <div className="mb-8 flex justify-between items-end">
+          <h2 className="text-2xl font-light">Subscribers <span className="text-gray-400 ml-2">{total}</span></h2>
+          <div className="flex gap-6">
+            <button
+              onClick={fetchSubscribers}
+              className="text-sm text-gray-500 hover:text-black transition-colors"
+            >
+              Refresh
+            </button>
+            <button
               onClick={exportCSV}
-              variant="outline"
-              className="bg-white border-gray-200 cursor-pointer shadow-xs font-semibold"
-              size="sm"
+              className="text-sm text-gray-500 hover:text-black transition-colors"
             >
               Export CSV
-            </Button>
+            </button>
+          </div>
+        </div>
+
+        {/* Minimalist Table */}
+        <div className="w-full">
+          {subscribers.length === 0 ? (
+            <div className="py-12 text-center text-gray-400 font-light">
+              No subscribers yet
             </div>
-          </CardHeader>
-          <CardContent className="p-0">
-            {subscribers.length === 0 ? (
-              <div className="text-center py-12">
-                <p className="text-muted-foreground text-lg font-semibold">No subscribers found</p>
+          ) : (
+            <div className="w-full">
+              <div className="grid grid-cols-2 border-b border-gray-100 pb-4 mb-4 text-sm text-gray-400 uppercase tracking-wider">
+                <div>Email</div>
+                <div className="text-right">Date Subscribed</div>
               </div>
-            ) : (
-              <div className="divide-y divide-gray-200">
-                {subscribers.map((subscriber, index) => (
-                  <div 
-                    key={subscriber.id} 
-                    className={`px-6 py-4 hover:bg-gray-50 transition-colors ${
-                      index === 0 ? 'border-t-0' : ''
-                    }`}
+              <div className="space-y-4">
+                {subscribers.map((subscriber) => (
+                  <div
+                    key={subscriber.id}
+                    className="grid grid-cols-2 py-2 border-b border-gray-50 hover:bg-gray-50 transition-colors -mx-2 px-2 rounded"
                   >
-                    <div className="flex items-center justify-between">
-                      <div className="flex-1">
-                        <p className="text-md font-semibold text-gray-900">
-                          {subscriber.email}
-                        </p>
-                        <p className="text-sm text-gray-500 mt-1 font-medium">
-                          Subscribed: {new Date(subscriber.subscribed_at).toLocaleString()}
-                        </p>
-                      </div>
+                    <div className="text-lg font-light text-gray-900 truncate pr-4">
+                      {subscriber.email}
+                    </div>
+                    <div className="text-right text-gray-500 font-light">
+                      {new Date(subscriber.subscribed_at).toLocaleDateString('en-US', {
+                        year: 'numeric',
+                        month: 'long',
+                        day: 'numeric'
+                      })}
                     </div>
                   </div>
                 ))}
               </div>
-            )}
-          </CardContent>
-        </Card>
-
-        {/* Refresh Button */}
-        <div className="mt-6 text-center">
-          <Button
-            onClick={fetchSubscribers}
-            variant="outline"
-            className="font-semibold"
-          >
-            Refresh
-          </Button>
+            </div>
+          )}
         </div>
       </div>
     </div>

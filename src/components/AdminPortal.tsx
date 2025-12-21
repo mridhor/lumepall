@@ -34,20 +34,11 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({ currentPrice, onPriceU
     fetchFundParams();
   }, []);
 
-  const handlePriceUpdate = () => {
-    if (!isNaN(priceInput) && priceInput > 0) {
-      onPriceUpdate(priceInput);
-      setMessage("Snobol price updated.");
-    } else {
-      setMessage("Please enter a valid number.");
-    }
-  };
-
   const handleFundParamsUpdate = async () => {
     if (!isNaN(baseFundValue) && baseFundValue >= 0 &&
-        !isNaN(silverTroyOunces) && silverTroyOunces >= 0 &&
-        !isNaN(silverPriceUSD) && silverPriceUSD > 0 &&
-        !isNaN(baseSharePrice) && baseSharePrice > 0) {
+      !isNaN(silverTroyOunces) && silverTroyOunces >= 0 &&
+      !isNaN(silverPriceUSD) && silverPriceUSD > 0 &&
+      !isNaN(baseSharePrice) && baseSharePrice > 0) {
       try {
         const response = await fetch('/api/fund-params', {
           method: 'POST',
@@ -64,108 +55,124 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({ currentPrice, onPriceU
 
         const data = await response.json();
         if (data.success) {
-          setFundMessage("Fund parameters updated successfully!");
+          setFundMessage("Fund parameters updated successfully");
           // Also update the legacy price input
           setPriceInput(baseSharePrice);
           onPriceUpdate(baseSharePrice);
+
+          // Clear message after 3 seconds
+          setTimeout(() => setFundMessage(""), 3000);
         } else {
-          setFundMessage("Error updating fund parameters.");
+          setFundMessage("Error updating fund parameters");
         }
       } catch (error) {
         console.error('Error updating fund parameters:', error);
-        setFundMessage("Error updating fund parameters.");
+        setFundMessage("Error updating fund parameters");
       }
     } else {
-      setFundMessage("Please enter valid numbers.");
+      setFundMessage("Please enter valid numbers");
     }
   };
 
   return (
-    <div style={{ padding: "1.5rem", border: "1px solid gray", borderRadius: "8px", maxWidth: "600px" }}>
-      <h2 style={{ marginBottom: "1rem" }}>🛠 Admin Panel</h2>
+    <div className="w-full">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
+        {/* Left Column: Live Status */}
+        <div>
+          <h3 className="text-2xl font-light mb-6">Live Status</h3>
+          <div className="bg-gray-50 p-8 rounded-2xl">
+            <div className="mb-8">
+              <p className="text-gray-500 text-sm uppercase tracking-wider mb-2">Current Share Price</p>
+              <div className="text-5xl font-light">
+                {currentPrice.toFixed(4)} <span className="text-xl text-gray-400">EUR</span>
+              </div>
+              <p className="text-gray-400 text-sm mt-2 font-light">
+                Fluctuates ±€0.01-0.05 around base
+              </p>
+            </div>
 
-      {/* Share Price Section - Moved to Fund Parameters */}
-      <div style={{ marginBottom: "1.5rem", paddingBottom: "1.5rem", borderBottom: "1px solid #ddd" }}>
-        <h3 style={{ marginBottom: "0.5rem" }}>Share Price (Live with Fluctuation)</h3>
-        <p>📈 Current Price: <strong>{currentPrice.toFixed(4)} EUR</strong></p>
-        <p style={{ fontSize: "0.85rem", color: "#666", marginTop: "0.25rem" }}>
-          This price fluctuates ±€0.01 to ±€0.05 around your base price every second
-        </p>
-      </div>
-
-      {/* Fund Parameters Section */}
-      <div>
-        <h3 style={{ marginBottom: "0.5rem" }}>Fund Parameters</h3>
-        <p style={{ fontSize: "0.9rem", color: "#666", marginBottom: "1rem" }}>
-          Set all fund parameters including base share price, fund value, and silver holdings.
-        </p>
-
-        <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
-          <label style={{ display: "flex", flexDirection: "column" }}>
-            Base Share Price (EUR):
-            <input
-              type="number"
-              step="0.01"
-              value={baseSharePrice}
-              onChange={(e) => setBaseSharePrice(parseFloat(e.target.value))}
-              style={{ marginTop: "0.25rem", padding: "0.5rem", width: "200px" }}
-            />
-            <span style={{ fontSize: "0.85rem", color: "#666", marginTop: "0.25rem" }}>
-              Share price will fluctuate ±€0.01-0.05 around this base
-            </span>
-          </label>
-
-          <label style={{ display: "flex", flexDirection: "column" }}>
-            Base Fund Value (EUR):
-            <input
-              type="number"
-              step="1000"
-              value={baseFundValue}
-              onChange={(e) => setBaseFundValue(parseFloat(e.target.value))}
-              style={{ marginTop: "0.25rem", padding: "0.5rem", width: "200px" }}
-            />
-            <span style={{ fontSize: "0.85rem", color: "#666", marginTop: "0.25rem" }}>
-              Non-silver portion of the fund
-            </span>
-          </label>
-
-          <label style={{ display: "flex", flexDirection: "column" }}>
-            Silver Holdings (Troy Ounces):
-            <input
-              type="number"
-              step="100"
-              value={silverTroyOunces}
-              onChange={(e) => setSilverTroyOunces(parseFloat(e.target.value))}
-              style={{ marginTop: "0.25rem", padding: "0.5rem", width: "200px" }}
-            />
-            <span style={{ fontSize: "0.85rem", color: "#666", marginTop: "0.25rem" }}>
-              Physical silver held in Troy ounces
-            </span>
-          </label>
-
-          <label style={{ display: "flex", flexDirection: "column" }}>
-            Silver Price (USD per Troy Ounce):
-            <input
-              type="number"
-              step="0.01"
-              value={silverPriceUSD}
-              onChange={(e) => setSilverPriceUSD(parseFloat(e.target.value))}
-              style={{ marginTop: "0.25rem", padding: "0.5rem", width: "200px" }}
-            />
-            <span style={{ fontSize: "0.85rem", color: "#666", marginTop: "0.25rem" }}>
-              Current silver spot price (set manually)
-            </span>
-          </label>
-
-          <button
-            onClick={handleFundParamsUpdate}
-            style={{ padding: "0.5rem 1rem", marginTop: "0.5rem", width: "fit-content" }}
-          >
-            Update Fund Parameters
-          </button>
+            <div>
+              <p className="text-gray-500 text-sm uppercase tracking-wider mb-2">Base Price</p>
+              <div className="text-3xl font-light text-gray-800">
+                {baseSharePrice.toFixed(2)} <span className="text-lg text-gray-400">EUR</span>
+              </div>
+            </div>
+          </div>
         </div>
 
-        {fundMessage && <p style={{ marginTop: "0.5rem", color: "green", fontSize: "0.9rem" }}>{fundMessage}</p>}
+        {/* Right Column: Controls */}
+        <div>
+          <h3 className="text-2xl font-light mb-6">Fund Parameters</h3>
+          <div className="space-y-8">
+            <div className="group">
+              <label className="block text-gray-500 text-sm uppercase tracking-wider mb-2 group-focus-within:text-black transition-colors">
+                Base Share Price (EUR)
+              </label>
+              <input
+                type="number"
+                step="0.01"
+                value={baseSharePrice}
+                onChange={(e) => setBaseSharePrice(parseFloat(e.target.value))}
+                className="w-full text-3xl font-light border-b border-gray-200 py-2 focus:border-black outline-none transition-colors bg-transparent placeholder-gray-200"
+              />
+            </div>
+
+            <div className="group">
+              <label className="block text-gray-500 text-sm uppercase tracking-wider mb-2 group-focus-within:text-black transition-colors">
+                Base Fund Value (EUR)
+              </label>
+              <input
+                type="number"
+                step="1000"
+                value={baseFundValue}
+                onChange={(e) => setBaseFundValue(parseFloat(e.target.value))}
+                className="w-full text-3xl font-light border-b border-gray-200 py-2 focus:border-black outline-none transition-colors bg-transparent placeholder-gray-200"
+              />
+              <p className="text-xs text-gray-400 mt-1">Non-silver portion of the fund</p>
+            </div>
+
+            <div className="group">
+              <label className="block text-gray-500 text-sm uppercase tracking-wider mb-2 group-focus-within:text-black transition-colors">
+                Silver Holdings (Troy Oz)
+              </label>
+              <input
+                type="number"
+                step="100"
+                value={silverTroyOunces}
+                onChange={(e) => setSilverTroyOunces(parseFloat(e.target.value))}
+                className="w-full text-3xl font-light border-b border-gray-200 py-2 focus:border-black outline-none transition-colors bg-transparent placeholder-gray-200"
+              />
+            </div>
+
+            <div className="group">
+              <label className="block text-gray-500 text-sm uppercase tracking-wider mb-2 group-focus-within:text-black transition-colors">
+                Silver Price (USD/Oz)
+              </label>
+              <input
+                type="number"
+                step="0.01"
+                value={silverPriceUSD}
+                onChange={(e) => setSilverPriceUSD(parseFloat(e.target.value))}
+                className="w-full text-3xl font-light border-b border-gray-200 py-2 focus:border-black outline-none transition-colors bg-transparent placeholder-gray-200"
+              />
+            </div>
+
+            <div className="pt-4 flex items-center justify-between">
+              <button
+                onClick={handleFundParamsUpdate}
+                className="bg-black text-white px-8 py-3 rounded-full hover:bg-gray-800 transition-all active:scale-95 text-sm uppercase tracking-wider font-medium"
+              >
+                Update Parameters
+              </button>
+
+              {fundMessage && (
+                <span className={`text-sm ${fundMessage.includes('Error') ? 'text-red-500' : 'text-green-600'}`}>
+                  {fundMessage}
+                </span>
+              )}
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   );
