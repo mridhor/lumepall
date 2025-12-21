@@ -13,6 +13,7 @@ interface ArticleData {
     slug: string;
     content?: string;
     thumbnail_url?: string;
+    image_url?: string;
     published_at: string;
 }
 
@@ -155,11 +156,11 @@ export default function ArticlePage({
                     </header>
 
                     {/* Featured Image */}
-                    {article.thumbnail_url && (
+                    {article.image_url && (
                         <div className="mb-10 rounded-lg overflow-hidden bg-gray-100">
                             <div className="aspect-video relative">
                                 <img
-                                    src={article.thumbnail_url}
+                                    src={article.image_url}
                                     alt={article.title}
                                     className="w-full h-full object-cover"
                                 />

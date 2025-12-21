@@ -430,7 +430,7 @@ interface MediaCardProps {
 
 const MediaCard = ({ item }: MediaCardProps) => {
   // Use image_url as fallback for thumbnail_url
-  const imageUrl = item.thumbnail_url || item.image_url;
+  const imageUrl = item.image_url || item.thumbnail_url;
 
   // For articles with slug, use internal routing
   if (item.type === 'article' && item.slug) {
@@ -450,9 +450,6 @@ const MediaCard = ({ item }: MediaCardProps) => {
           )}
           <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-3">
             <p className="text-white text-sm font-medium line-clamp-2">{item.title}</p>
-            {item.description && (
-              <p className="text-white/70 text-xs line-clamp-2 mt-1">{item.description}</p>
-            )}
           </div>
         </div>
       </Link>
@@ -506,32 +503,32 @@ const placeholderMedia: MediaItem[] = [
   {
     id: '1',
     title: 'WOWW UNIKAALSUS',
-    type: 'video',
-    thumbnail_url: '/placeholder-video-1.jpg',
+    type: 'article',
+    image_url: '/placeholder-video-1.jpg',
     video_url: '#',
     published_at: new Date().toISOString()
   },
   {
     id: '2',
     title: 'WOWW UNIKAALSUS',
-    type: 'video',
-    thumbnail_url: '/placeholder-video-2.jpg',
+    type: 'article',
+    image_url: '/placeholder-video-2.jpg',
     video_url: '#',
     published_at: new Date().toISOString()
   },
   {
     id: '3',
     title: 'WOWW UNIKAALSUS',
-    type: 'video',
-    thumbnail_url: '/placeholder-video-3.jpg',
+    type: 'article',
+    image_url: '/placeholder-video-3.jpg',
     video_url: '#',
     published_at: new Date().toISOString()
   },
   {
     id: '4',
     title: 'WOWW UNIKAALSUS',
-    type: 'video',
-    thumbnail_url: '/placeholder-video-4.jpg',
+    type: 'article',
+    image_url: '/placeholder-video-4.jpg',
     video_url: '#',
     published_at: new Date().toISOString()
   }

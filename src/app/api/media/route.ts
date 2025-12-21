@@ -50,7 +50,7 @@ export async function GET() {
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const { title, description, type, thumbnail_url, video_url, article_url } = body;
+    const { title, description, type, image_url, thumbnail_url, video_url, article_url } = body;
 
     if (!title || !type) {
       return NextResponse.json({ error: 'Title and type are required' }, { status: 400 });
@@ -64,6 +64,7 @@ export async function POST(request: Request) {
           description,
           type,
           thumbnail_url,
+          image_url,
           video_url,
           article_url,
           published_at: new Date().toISOString(),
