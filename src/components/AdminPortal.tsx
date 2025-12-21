@@ -81,7 +81,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({ currentPrice, onPriceU
         <div>
           <h3 className="text-xl font-medium mb-6">Live Status</h3>
           <div className="bg-gray-100 p-8 rounded-2xl border border-gray-200">
-            <div className="mb-8">
+            <div className="mb-2">
               <p className="text-gray-600 text-xs uppercase tracking-wider mb-2 font-semibold">Current Share Price</p>
               <div className="text-4xl font-medium text-black">
                 {currentPrice.toFixed(4)} <span className="text-lg text-gray-500 font-normal">EUR</span>
