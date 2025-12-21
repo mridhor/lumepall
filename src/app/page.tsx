@@ -218,7 +218,7 @@ const PriceGraph = React.memo(function PriceGraph({ currentPrice = 1.7957, showD
   );
 });
 
-// Fund Assets Graph Component - Shows total fund assets over time
+// Fund Assets Graph Component - Shows total fund assets with real-time silver price fluctuation
 interface ValueGraphProps {
   currency: 'EUR' | 'USD';
 }
@@ -229,7 +229,8 @@ interface FundAssetData {
 }
 
 const ValueGraph = React.memo(function ValueGraph({ currency }: ValueGraphProps) {
-  const [fundAssets, setFundAssets] = useState<FundAssetData[]>([]);
+  const [historicalAssets, setHistoricalAssets] = useState<FundAssetData[]>([]);
+  const [currentFundValue, setCurrentFundValue] = useState<number>(718); // Current value in thousands
   const [loading, setLoading] = useState(true);
   const [isMobile, setIsMobile] = useState(false);
 
@@ -241,42 +242,112 @@ const ValueGraph = React.memo(function ValueGraph({ currency }: ValueGraphProps)
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
 
-  // Convert data based on currency
-  const displayData = useMemo(() => {
-    if (currency === 'USD') {
-      return fundAssets.map(item => ({
-        ...item,
-        total_assets: item.total_assets * EUR_TO_USD
-      }));
-    }
-    return fundAssets;
-  }, [fundAssets, currency]);
-
+  // Fetch historical data once
   useEffect(() => {
-    const fetchData = async () => {
+    const fetchHistoricalData = async () => {
       setLoading(true);
       try {
         const response = await fetch('/api/fund-assets');
         const data = await response.json();
 
         if (data.success && data.fundAssets) {
-          // Ensure data is sorted chronologically (additional safeguard)
+          // Ensure data is sorted chronologically
           const sortedAssets = [...data.fundAssets].sort((a, b) => {
             const dateA = new Date(a.date).getTime();
             const dateB = new Date(b.date).getTime();
             return dateA - dateB;
           });
-          setFundAssets(sortedAssets);
+          setHistoricalAssets(sortedAssets);
         }
       } catch (error) {
-        console.error('Failed to load fund assets data', error);
+        console.error('Failed to load historical fund assets data', error);
       } finally {
         setLoading(false);
       }
     };
 
-    fetchData();
+    fetchHistoricalData();
   }, []);
+
+  // Real-time fund value updates based on silver price (updates every 2 seconds)
+  useEffect(() => {
+    let updateInterval: NodeJS.Timeout | null = null;
+
+    const updateFundValue = async () => {
+      try {
+        // Fetch fund parameters and silver price
+        const [paramsRes, silverRes] = await Promise.all([
+          fetch('/api/fund-params'),
+          fetch('/api/silver-price'),
+        ]);
+
+        const [paramsData, silverData] = await Promise.all([
+          paramsRes.json(),
+          silverRes.json(),
+        ]);
+
+        if (paramsData.success && silverData.success) {
+          const baseFundValue = paramsData.base_fund_value;
+          const silverTroyOunces = paramsData.silver_troy_ounces;
+          const silverPriceUSD = silverData.silverPrice;
+
+          // Calculate silver value in EUR
+          const silverValueUSD = silverTroyOunces * silverPriceUSD;
+          const silverValueEUR = silverValueUSD / EUR_TO_USD;
+
+          // Total fund value in EUR
+          const totalValueEUR = baseFundValue + silverValueEUR;
+
+          // Convert to thousands
+          const totalValueThousands = totalValueEUR / 1000;
+
+          setCurrentFundValue(totalValueThousands);
+        }
+      } catch (error) {
+        console.error('Failed to update fund value:', error);
+      }
+    };
+
+    // Initial update
+    updateFundValue();
+
+    // Update every 2 seconds
+    updateInterval = setInterval(updateFundValue, 2000);
+
+    return () => {
+      if (updateInterval) {
+        clearInterval(updateInterval);
+      }
+    };
+  }, []);
+
+  // Combine historical data with current live value
+  const displayData = useMemo(() => {
+    const data = [...historicalAssets];
+
+    // Add current live value as the latest data point
+    if (currentFundValue > 0) {
+      const today = new Date().toLocaleDateString('en-US', {
+        month: 'short',
+        day: 'numeric',
+        year: 'numeric',
+      });
+
+      data.push({
+        date: today,
+        total_assets: currentFundValue,
+      });
+    }
+
+    // Convert to selected currency
+    if (currency === 'USD') {
+      return data.map(item => ({
+        ...item,
+        total_assets: item.total_assets * EUR_TO_USD
+      }));
+    }
+    return data;
+  }, [historicalAssets, currentFundValue, currency]);
 
   const currencySymbol = currency === 'EUR' ? '€' : '$';
   const latestValue = displayData[displayData.length - 1]?.total_assets ?? 0;
