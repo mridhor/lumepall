@@ -79,22 +79,22 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({ currentPrice, onPriceU
       <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
         {/* Left Column: Live Status */}
         <div>
-          <h3 className="text-2xl font-light mb-6">Live Status</h3>
-          <div className="bg-gray-50 p-8 rounded-2xl">
+          <h3 className="text-xl font-medium mb-6">Live Status</h3>
+          <div className="bg-gray-100 p-8 rounded-2xl border border-gray-200">
             <div className="mb-8">
-              <p className="text-gray-500 text-sm uppercase tracking-wider mb-2">Current Share Price</p>
-              <div className="text-5xl font-light">
-                {currentPrice.toFixed(4)} <span className="text-xl text-gray-400">EUR</span>
+              <p className="text-gray-600 text-xs uppercase tracking-wider mb-2 font-semibold">Current Share Price</p>
+              <div className="text-4xl font-medium text-black">
+                {currentPrice.toFixed(4)} <span className="text-lg text-gray-500 font-normal">EUR</span>
               </div>
-              <p className="text-gray-400 text-sm mt-2 font-light">
+              <p className="text-gray-500 text-sm mt-2">
                 Fluctuates ±€0.01-0.05 around base
               </p>
             </div>
 
             <div>
-              <p className="text-gray-500 text-sm uppercase tracking-wider mb-2">Base Price</p>
-              <div className="text-3xl font-light text-gray-800">
-                {baseSharePrice.toFixed(2)} <span className="text-lg text-gray-400">EUR</span>
+              <p className="text-gray-600 text-xs uppercase tracking-wider mb-2 font-semibold">Base Price</p>
+              <div className="text-2xl font-medium text-gray-900">
+                {baseSharePrice.toFixed(2)} <span className="text-base text-gray-500 font-normal">EUR</span>
               </div>
             </div>
           </div>
@@ -102,10 +102,10 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({ currentPrice, onPriceU
 
         {/* Right Column: Controls */}
         <div>
-          <h3 className="text-2xl font-light mb-6">Fund Parameters</h3>
-          <div className="space-y-8">
+          <h3 className="text-xl font-medium mb-6">Fund Parameters</h3>
+          <div className="space-y-6">
             <div className="group">
-              <label className="block text-gray-500 text-sm uppercase tracking-wider mb-2 group-focus-within:text-black transition-colors">
+              <label className="block text-gray-600 text-xs uppercase tracking-wider mb-2 group-focus-within:text-black transition-colors font-semibold">
                 Base Share Price (EUR)
               </label>
               <input
@@ -113,12 +113,12 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({ currentPrice, onPriceU
                 step="0.01"
                 value={baseSharePrice}
                 onChange={(e) => setBaseSharePrice(parseFloat(e.target.value))}
-                className="w-full text-3xl font-light border-b border-gray-200 py-2 focus:border-black outline-none transition-colors bg-transparent placeholder-gray-200"
+                className="w-full text-2xl font-normal border-b border-gray-300 py-2 focus:border-black outline-none transition-colors bg-transparent placeholder-gray-300 text-black"
               />
             </div>
 
             <div className="group">
-              <label className="block text-gray-500 text-sm uppercase tracking-wider mb-2 group-focus-within:text-black transition-colors">
+              <label className="block text-gray-600 text-xs uppercase tracking-wider mb-2 group-focus-within:text-black transition-colors font-semibold">
                 Base Fund Value (EUR)
               </label>
               <input
@@ -126,13 +126,13 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({ currentPrice, onPriceU
                 step="1000"
                 value={baseFundValue}
                 onChange={(e) => setBaseFundValue(parseFloat(e.target.value))}
-                className="w-full text-3xl font-light border-b border-gray-200 py-2 focus:border-black outline-none transition-colors bg-transparent placeholder-gray-200"
+                className="w-full text-2xl font-normal border-b border-gray-300 py-2 focus:border-black outline-none transition-colors bg-transparent placeholder-gray-300 text-black"
               />
-              <p className="text-xs text-gray-400 mt-1">Non-silver portion of the fund</p>
+              <p className="text-xs text-gray-500 mt-1">Non-silver portion of the fund</p>
             </div>
 
             <div className="group">
-              <label className="block text-gray-500 text-sm uppercase tracking-wider mb-2 group-focus-within:text-black transition-colors">
+              <label className="block text-gray-600 text-xs uppercase tracking-wider mb-2 group-focus-within:text-black transition-colors font-semibold">
                 Silver Holdings (Troy Oz)
               </label>
               <input
@@ -140,12 +140,12 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({ currentPrice, onPriceU
                 step="100"
                 value={silverTroyOunces}
                 onChange={(e) => setSilverTroyOunces(parseFloat(e.target.value))}
-                className="w-full text-3xl font-light border-b border-gray-200 py-2 focus:border-black outline-none transition-colors bg-transparent placeholder-gray-200"
+                className="w-full text-2xl font-normal border-b border-gray-300 py-2 focus:border-black outline-none transition-colors bg-transparent placeholder-gray-300 text-black"
               />
             </div>
 
             <div className="group">
-              <label className="block text-gray-500 text-sm uppercase tracking-wider mb-2 group-focus-within:text-black transition-colors">
+              <label className="block text-gray-600 text-xs uppercase tracking-wider mb-2 group-focus-within:text-black transition-colors font-semibold">
                 Silver Price (USD/Oz)
               </label>
               <input
@@ -153,20 +153,20 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({ currentPrice, onPriceU
                 step="0.01"
                 value={silverPriceUSD}
                 onChange={(e) => setSilverPriceUSD(parseFloat(e.target.value))}
-                className="w-full text-3xl font-light border-b border-gray-200 py-2 focus:border-black outline-none transition-colors bg-transparent placeholder-gray-200"
+                className="w-full text-2xl font-normal border-b border-gray-300 py-2 focus:border-black outline-none transition-colors bg-transparent placeholder-gray-300 text-black"
               />
             </div>
 
             <div className="pt-4 flex items-center justify-between">
               <button
                 onClick={handleFundParamsUpdate}
-                className="bg-black text-white px-8 py-3 rounded-full hover:bg-gray-800 transition-all active:scale-95 text-sm uppercase tracking-wider font-medium"
+                className="bg-black text-white px-6 py-2.5 rounded-full hover:bg-gray-800 transition-all active:scale-95 text-xs uppercase tracking-wider font-bold"
               >
                 Update Parameters
               </button>
 
               {fundMessage && (
-                <span className={`text-sm ${fundMessage.includes('Error') ? 'text-red-500' : 'text-green-600'}`}>
+                <span className={`text-sm font-medium ${fundMessage.includes('Error') ? 'text-red-600' : 'text-green-700'}`}>
                   {fundMessage}
                 </span>
               )}
