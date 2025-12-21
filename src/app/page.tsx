@@ -41,7 +41,7 @@ interface PriceGraphProps {
   showDivider?: boolean;
 }
 
-const PriceGraph = React.memo(function PriceGraph({ currentPrice = 1.7957, showDivider = true }: PriceGraphProps) {
+const PriceGraph = React.memo(function PriceGraph({ currentPrice = 0, showDivider = true }: PriceGraphProps) {
   const [chartData, setChartData] = useState<ChartData[]>(() => {
     return formatAreaChartData()
   });
@@ -163,6 +163,8 @@ const PriceGraph = React.memo(function PriceGraph({ currentPrice = 1.7957, showD
 
   // Update chart data when currentPrice prop changes (real-time fluctuation)
   useEffect(() => {
+    if (currentPrice <= 0) return; // Don't update chart with 0 price
+
     setChartData(prev => {
       if (!prev || prev.length === 0) return prev;
       const lastIdx = prev.length - 1;
@@ -179,8 +181,12 @@ const PriceGraph = React.memo(function PriceGraph({ currentPrice = 1.7957, showD
 
   return (
     <div className="w-full h-full flex flex-col">
-      <div className="text-2xl md:text-3xl mb-2 text-right" style={{ fontFamily: 'Avenir Light', fontWeight: 300, height: '16px' }}>
-        €{currentPrice.toFixed(3)}
+      <div className="text-2xl md:text-3xl mb-2 text-right flex justify-end" style={{ fontFamily: 'Avenir Light', fontWeight: 300, height: '32px' }}>
+        {currentPrice > 0 ? (
+          `€${currentPrice.toFixed(3)}`
+        ) : (
+          <div className="h-6 w-24 bg-gray-100 animate-pulse rounded"></div>
+        )}
       </div>
       <div className="flex-1">
         <ResponsiveContainer width="100%" height="100%">
@@ -618,7 +624,7 @@ const placeholderMedia: MediaItem[] = [
 
 export default function Homepage() {
   const [emailError, setEmailError] = useState(false);
-  const [priceData, setPriceData] = useState({ currentPrice: 1.7957, currentSP500Price: 3.30 });
+  const [priceData, setPriceData] = useState({ currentPrice: 0, currentSP500Price: 3.30 });
   const [errorMessage, setErrorMessage] = useState('');
   const [isSuccess, setIsSuccess] = useState(false);
   const [isSent, setIsSent] = useState(false);
