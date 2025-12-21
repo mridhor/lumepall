@@ -10,7 +10,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({ currentPrice, onPriceU
   const [baseFundValue, setBaseFundValue] = useState(500000);
   const [silverTroyOunces, setSilverTroyOunces] = useState(5000);
   const [silverPriceUSD, setSilverPriceUSD] = useState(31.25);
-  const [baseSharePrice, setBaseSharePrice] = useState(1.82);
+  const [baseSharePrice, setBaseSharePrice] = useState(1.824);
   const [message, setMessage] = useState("");
   const [fundMessage, setFundMessage] = useState("");
 
@@ -24,8 +24,8 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({ currentPrice, onPriceU
           setBaseFundValue(data.base_fund_value);
           setSilverTroyOunces(data.silver_troy_ounces);
           setSilverPriceUSD(data.silver_price_usd || 31.25);
-          setBaseSharePrice(data.base_share_price || 1.82);
-          setPriceInput(data.base_share_price || 1.82);
+          setBaseSharePrice(data.base_share_price || 1.824);
+          setPriceInput(data.base_share_price || 1.824);
         }
       } catch (error) {
         console.error('Failed to fetch fund parameters:', error);

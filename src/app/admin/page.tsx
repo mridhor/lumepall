@@ -16,7 +16,7 @@ export default function AdminDashboard() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [total, setTotal] = useState(0);
-  const [currentSharePrice, setCurrentSharePrice] = useState(1.80);
+  const [currentSharePrice, setCurrentSharePrice] = useState(1.824);
   const router = useRouter();
 
   const fetchSubscribers = useCallback(async () => {
