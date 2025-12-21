@@ -69,8 +69,8 @@ export default function AdminDashboard() {
     fetchSubscribers();
     fetchSharePrice();
 
-    // Update share price every second to show fluctuation
-    const interval = setInterval(fetchSharePrice, 1000);
+    // Update share price every 5 seconds to show fluctuation
+    const interval = setInterval(fetchSharePrice, 5000);
     return () => clearInterval(interval);
   }, [fetchSubscribers, fetchSharePrice]);
 

@@ -86,16 +86,6 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({ currentPrice, onPriceU
               <div className="text-4xl font-medium text-black">
                 {currentPrice.toFixed(4)} <span className="text-lg text-gray-500 font-normal">EUR</span>
               </div>
-              <p className="text-gray-500 text-sm mt-2">
-                Fluctuates ±€0.01-0.05 around base
-              </p>
-            </div>
-
-            <div>
-              <p className="text-gray-600 text-xs uppercase tracking-wider mb-2 font-semibold">Base Price</p>
-              <div className="text-2xl font-medium text-gray-900">
-                {baseSharePrice.toFixed(2)} <span className="text-base text-gray-500 font-normal">EUR</span>
-              </div>
             </div>
           </div>
         </div>
