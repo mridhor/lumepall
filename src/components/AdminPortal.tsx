@@ -134,13 +134,14 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({ currentPrice, onPriceU
               />
             </div>
 
-            <div className="group">
+            <div className="group hidden">
               <label className="block text-gray-600 text-xs uppercase tracking-wider mb-2 group-focus-within:text-black transition-colors font-semibold">
                 Silver Price (USD/Oz)
               </label>
               <input
                 type="number"
                 step="0.01"
+                disabled
                 value={silverPriceUSD}
                 onChange={(e) => setSilverPriceUSD(parseFloat(e.target.value))}
                 className="w-full text-2xl font-normal border-b border-gray-300 py-2 focus:border-black outline-none transition-colors bg-transparent placeholder-gray-300 text-black"
