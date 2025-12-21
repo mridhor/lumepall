@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { supabase } from '@/lib/supabase';
+import { supabase, isSupabaseConfigured } from '@/lib/supabase';
 
 export interface MediaItem {
   id: string;
@@ -17,6 +17,12 @@ export interface MediaItem {
 }
 
 export async function GET() {
+  // Check if Supabase is configured
+  if (!isSupabaseConfigured || !supabase) {
+    console.log('Supabase not configured, returning empty media array');
+    return NextResponse.json({ media: [] });
+  }
+
   try {
     const { data, error } = await supabase
       .from('lumepall_media')
@@ -27,10 +33,10 @@ export async function GET() {
 
     if (error) {
       console.error('Supabase error:', error);
-      // Return empty array if table doesn't exist yet
       return NextResponse.json({ media: [] });
     }
 
+    console.log('Fetched media from Supabase:', data?.length || 0, 'items');
     return NextResponse.json({ media: data || [] });
   } catch (error) {
     console.error('Failed to fetch media:', error);
