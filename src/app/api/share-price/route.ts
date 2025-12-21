@@ -12,9 +12,9 @@ function getFluctuation(basePrice: number): number {
   // Create pseudo-random value between 0 and 1
   const pseudoRand = Math.abs(Math.sin(seed * 9301 + 49297) * 233280) % 1;
 
-  // Fluctuation range: ±0.01 to ±0.05 EUR
-  const minFluctuation = 0.01;
-  const maxFluctuation = 0.05;
+  // Fluctuation range: ±0.005 to ±0.02 EUR
+  const minFluctuation = 0.005;
+  const maxFluctuation = 0.02;
 
   // Random fluctuation amount
   const fluctuationAmount = minFluctuation + (pseudoRand * (maxFluctuation - minFluctuation));
