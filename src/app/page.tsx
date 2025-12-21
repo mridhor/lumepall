@@ -448,8 +448,8 @@ const MediaCard = ({ item }: MediaCardProps) => {
               <span className="text-gray-400 text-sm">No thumbnail</span>
             </div>
           )}
-          <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-3">
-            <p className="text-white text-sm font-medium line-clamp-2">{item.title}</p>
+          <div className="absolute bottom-0 left-0 right-0 h-2/3 bg-gradient-to-t from-black via-black/60 to-transparent p-3 flex items-end">
+            <p className="text-white text-sm font-medium line-clamp-2 drop-shadow-lg">{item.title}</p>
           </div>
         </div>
       </Link>
@@ -488,10 +488,10 @@ const MediaCard = ({ item }: MediaCardProps) => {
           </div>
         </div>
       )}
-      <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-3">
-        <p className="text-white text-sm font-medium line-clamp-2">{item.title}</p>
+      <div className="absolute bottom-0 left-0 right-0 h-2/3 bg-gradient-to-t from-black via-black/60 to-transparent p-3 flex flex-col justify-end">
+        <p className="text-white text-sm font-medium line-clamp-2 drop-shadow-lg">{item.title}</p>
         {item.description && (
-          <p className="text-white/70 text-xs line-clamp-2 mt-1">{item.description}</p>
+          <p className="text-white/70 text-xs line-clamp-2 mt-1 drop-shadow-md">{item.description}</p>
         )}
       </div>
     </div>
