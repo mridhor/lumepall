@@ -6,6 +6,7 @@ CREATE TABLE IF NOT EXISTS lumepall_fund_params (
   base_fund_value DECIMAL(15, 2) NOT NULL DEFAULT 500000,  -- Base fund value in EUR (non-silver portion)
   silver_troy_ounces DECIMAL(15, 4) NOT NULL DEFAULT 5000,  -- Silver holdings in Troy ounces
   silver_price_usd DECIMAL(10, 2) NOT NULL DEFAULT 31.25,  -- Manual silver price in USD per Troy ounce
+  base_share_price DECIMAL(10, 4) NOT NULL DEFAULT 1.80,  -- Manual base share price in EUR
   created_at TIMESTAMPTZ DEFAULT NOW(),
   updated_at TIMESTAMPTZ DEFAULT NOW(),
   CONSTRAINT single_row_constraint CHECK (id = 1)  -- Ensure only one row exists
@@ -31,8 +32,8 @@ CREATE POLICY "Allow public insert access on fund params" ON lumepall_fund_param
   WITH CHECK (id = 1);
 
 -- Insert initial default values
-INSERT INTO lumepall_fund_params (id, base_fund_value, silver_troy_ounces, silver_price_usd)
-VALUES (1, 500000, 5000, 31.25)
+INSERT INTO lumepall_fund_params (id, base_fund_value, silver_troy_ounces, silver_price_usd, base_share_price)
+VALUES (1, 500000, 5000, 31.25, 1.80)
 ON CONFLICT (id) DO NOTHING;
 
 -- Verify data was inserted

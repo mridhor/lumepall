@@ -573,21 +573,30 @@ export default function Homepage() {
   const [valueCurrency, setValueCurrency] = useState<'EUR' | 'USD'>('EUR');
   const [mediaItems, setMediaItems] = useState<MediaItem[]>([]);
 
-  // Fetch price data
+  // Fetch price data with real-time fluctuation (updates every 1 second)
   useEffect(() => {
     const fetchPriceData = async () => {
       try {
-        const response = await fetch('/api/price');
+        const response = await fetch('/api/share-price', { cache: 'no-store' });
         const data = await response.json();
-        if (response.ok) {
-          setPriceData(data);
+        if (data.success && data.sharePrice) {
+          setPriceData({
+            currentPrice: data.sharePrice,
+            currentSP500Price: 3.30, // Keep default SP500 price
+          });
         }
       } catch (error) {
         console.error('Failed to fetch price data:', error);
       }
     };
 
+    // Initial fetch
     fetchPriceData();
+
+    // Update every 1 second to show fluctuation
+    const interval = setInterval(fetchPriceData, 1000);
+
+    return () => clearInterval(interval);
   }, []);
 
   // Fetch media items from Supabase

@@ -24,6 +24,7 @@ const fallbackFundParams = {
   base_fund_value: 500000, // Base fund value in EUR (non-silver portion)
   silver_troy_ounces: 5000, // Silver holdings in Troy ounces
   silver_price_usd: 31.25, // Manual silver price in USD per Troy ounce
+  base_share_price: 1.80, // Manual base share price in EUR
   last_updated: new Date().toISOString(),
 };
 
@@ -59,6 +60,7 @@ export async function GET(request: NextRequest) {
       base_fund_value: Number(data.base_fund_value),
       silver_troy_ounces: Number(data.silver_troy_ounces),
       silver_price_usd: Number(data.silver_price_usd || 31.25),
+      base_share_price: Number(data.base_share_price || 1.80),
       last_updated: data.updated_at || data.created_at,
     });
   } catch (error) {
@@ -72,12 +74,13 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
-    const { base_fund_value, silver_troy_ounces, silver_price_usd } = await request.json();
+    const { base_fund_value, silver_troy_ounces, silver_price_usd, base_share_price } = await request.json();
 
     if (
       typeof base_fund_value !== 'number' ||
       typeof silver_troy_ounces !== 'number' ||
-      typeof silver_price_usd !== 'number'
+      typeof silver_price_usd !== 'number' ||
+      (base_share_price !== undefined && typeof base_share_price !== 'number')
     ) {
       return NextResponse.json(
         { error: 'Invalid parameters' },
@@ -91,6 +94,9 @@ export async function POST(request: NextRequest) {
       fallbackFundParams.base_fund_value = base_fund_value;
       fallbackFundParams.silver_troy_ounces = silver_troy_ounces;
       fallbackFundParams.silver_price_usd = silver_price_usd;
+      if (base_share_price !== undefined) {
+        fallbackFundParams.base_share_price = base_share_price;
+      }
       fallbackFundParams.last_updated = new Date().toISOString();
 
       return NextResponse.json({
@@ -101,18 +107,21 @@ export async function POST(request: NextRequest) {
     }
 
     // Upsert fund parameters
+    const updateData: any = {
+      id: 1, // Single row for fund parameters
+      base_fund_value,
+      silver_troy_ounces,
+      silver_price_usd,
+      updated_at: new Date().toISOString(),
+    };
+
+    if (base_share_price !== undefined) {
+      updateData.base_share_price = base_share_price;
+    }
+
     const { error } = await supabase
       .from('lumepall_fund_params')
-      .upsert(
-        {
-          id: 1, // Single row for fund parameters
-          base_fund_value,
-          silver_troy_ounces,
-          silver_price_usd,
-          updated_at: new Date().toISOString(),
-        },
-        { onConflict: 'id' }
-      );
+      .upsert(updateData, { onConflict: 'id' });
 
     if (error) {
       console.error('Error updating fund params:', error);
