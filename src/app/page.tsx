@@ -172,8 +172,16 @@ const PriceGraph = React.memo(function PriceGraph({ currentPrice = 1.7957, showD
             axisLine={false}
             tickLine={false}
             tick={false}
-            hide
-          />
+            hide />
+          {/* Light gray vertical divider at 2021 transition */}
+          {dividerDate && (
+            <ReferenceLine
+              x={dividerDate}
+              stroke="#d1d5db"
+              strokeWidth={1}
+              strokeDasharray="none"
+            />
+          )}
           <Tooltip
             content={({ active, payload }) => {
               if (active && payload && payload.length) {
@@ -337,15 +345,6 @@ const ValueGraph = React.memo(function ValueGraph({ currency }: ValueGraphProps)
           >
             <XAxis dataKey="date" axisLine={false} tickLine={false} tick={false} hide />
             <YAxis axisLine={false} tickLine={false} tick={false} hide />
-            {/* Light gray vertical divider at 2021 transition */}
-            {dividerDate && (
-              <ReferenceLine
-                x={dividerDate}
-                stroke="#d1d5db"
-                strokeWidth={1}
-                strokeDasharray="none"
-              />
-            )}
             <Tooltip
               content={({ active, payload }) => {
                 if (active && payload && payload.length) {
