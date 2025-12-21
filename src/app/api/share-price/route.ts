@@ -13,8 +13,8 @@ function getSilverFluctuation(): number {
   const pseudoRand = Math.abs(Math.sin(seed * 9301 + 49297) * 233280) % 1;
 
   // Fluctuation range for silver: ±0.05 to ±0.30 USD (to cause ~0.001-0.006 EUR share price change)
-  const minFluctuation = 0.002;
-  const maxFluctuation = 0.008;
+  const minFluctuation = 0.05;
+  const maxFluctuation = 0.3;
 
   // Random fluctuation amount
   const fluctuationAmount = minFluctuation + (pseudoRand * (maxFluctuation - minFluctuation));
