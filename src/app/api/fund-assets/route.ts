@@ -21,18 +21,30 @@ async function getSupabaseClient(): Promise<SupabaseClient | null> {
 
 // Fallback data for development (total fund assets in EUR thousands)
 // This simulates the growth of total fund assets over time
+// Data is already sorted chronologically
 const fallbackFundAssets = [
   { date: 'Jan 5, 2015', total_assets: 89.7 },
+  { date: 'Jun 1, 2015', total_assets: 90.45 },
   { date: 'Dec 31, 2015', total_assets: 91.5 },
+  { date: 'Jun 6, 2016', total_assets: 92.4 },
   { date: 'Dec 31, 2016', total_assets: 93.45 },
+  { date: 'Jun 5, 2017', total_assets: 94.35 },
   { date: 'Dec 31, 2017', total_assets: 95.4 },
+  { date: 'Jun 4, 2018', total_assets: 96.3 },
   { date: 'Dec 31, 2018', total_assets: 97.35 },
+  { date: 'Jun 3, 2019', total_assets: 98.25 },
   { date: 'Dec 31, 2019', total_assets: 99.3 },
+  { date: 'Jun 1, 2020', total_assets: 99.94 },
   { date: 'Dec 31, 2020', total_assets: 100 },
+  { date: 'Jun 1, 2021', total_assets: 160 },
   { date: 'Dec 31, 2021', total_assets: 220 },
+  { date: 'Jun 6, 2022', total_assets: 265 },
   { date: 'Dec 31, 2022', total_assets: 328 },
+  { date: 'Jun 5, 2023', total_assets: 365 },
   { date: 'Dec 31, 2023', total_assets: 435 },
+  { date: 'Jun 3, 2024', total_assets: 495 },
   { date: 'Dec 31, 2024', total_assets: 575 },
+  { date: 'Jun 2, 2025', total_assets: 638 },
   { date: 'Dec 1, 2025', total_assets: 718 },
 ];
 
@@ -53,8 +65,7 @@ export async function GET(request: NextRequest) {
     // Fetch all fund assets history from Supabase
     const { data: fundAssetsData, error } = await supabase
       .from('lumepall_fund_assets')
-      .select('date, total_assets')
-      .order('date', { ascending: true });
+      .select('date, total_assets');
 
     if (error) {
       console.error('Error fetching fund assets:', error);
@@ -66,11 +77,18 @@ export async function GET(request: NextRequest) {
       });
     }
 
-    // Convert total_assets to thousands for easier display
-    const formattedAssets = fundAssetsData.map((item) => ({
-      date: item.date,
-      total_assets: Number(item.total_assets) / 1000, // Convert to thousands
-    }));
+    // Convert total_assets to thousands and sort chronologically
+    const formattedAssets = fundAssetsData
+      .map((item) => ({
+        date: item.date,
+        total_assets: Number(item.total_assets) / 1000, // Convert to thousands
+      }))
+      .sort((a, b) => {
+        // Sort by actual date, not alphabetically
+        const dateA = new Date(a.date).getTime();
+        const dateB = new Date(b.date).getTime();
+        return dateA - dateB;
+      });
 
     const currentTotalAssets = formattedAssets.length > 0
       ? formattedAssets[formattedAssets.length - 1].total_assets
