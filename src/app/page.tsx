@@ -152,80 +152,85 @@ const PriceGraph = React.memo(function PriceGraph({ currentPrice = 1.7957, showD
   }, []); // Only run once on mount, and listen for admin price update events
 
   return (
-    <div className="w-full h-full">
-      <ResponsiveContainer width="100%" height="100%">
-        <LineChart
-          data={chartData}
-          margin={{ top: 10, right: 10, left: 0, bottom: 10 }}
-        >
-          <XAxis
-            dataKey="date"
-            axisLine={false}
-            tickLine={false}
-            tick={false}
-            hide
-          />
-          <YAxis
-            axisLine={false}
-            tickLine={false}
-            tick={false}
-            hide />
-          {/* Light gray vertical divider at 2021 transition */}
-          {dividerDate && (
-            <ReferenceLine
-              x={dividerDate}
-              stroke="#d1d5db"
-              strokeWidth={1}
-              strokeDasharray="none"
+    <div className="w-full h-full flex flex-col">
+      <div className="text-2xl md:text-3xl mb-2" style={{ fontFamily: 'Avenir Light', fontWeight: 300 }}>
+        €{currentPrice.toFixed(2)}
+      </div>
+      <div className="flex-1">
+        <ResponsiveContainer width="100%" height="100%">
+          <LineChart
+            data={chartData}
+            margin={{ top: 10, right: 10, left: 0, bottom: 10 }}
+          >
+            <XAxis
+              dataKey="date"
+              axisLine={false}
+              tickLine={false}
+              tick={false}
+              hide
             />
-          )}
-          <Tooltip
-            content={({ active, payload }) => {
-              if (active && payload && payload.length) {
-                const data = payload[0].payload;
-                const isLatestPoint = data === chartData[chartData.length - 1];
-                const displayDate = isLatestPoint ?
-                  new Date().toLocaleDateString('en-US', {
-                    month: 'short',
-                    day: 'numeric',
-                    year: 'numeric'
-                  }) : data.fullDate;
+            <YAxis
+              axisLine={false}
+              tickLine={false}
+              tick={false}
+              hide />
+            {/* Light gray vertical divider at 2021 transition */}
+            {dividerDate && (
+              <ReferenceLine
+                x={dividerDate}
+                stroke="#d1d5db"
+                strokeWidth={1}
+                strokeDasharray="none"
+              />
+            )}
+            <Tooltip
+              content={({ active, payload }) => {
+                if (active && payload && payload.length) {
+                  const data = payload[0].payload;
+                  const isLatestPoint = data === chartData[chartData.length - 1];
+                  const displayDate = isLatestPoint ?
+                    new Date().toLocaleDateString('en-US', {
+                      month: 'short',
+                      day: 'numeric',
+                      year: 'numeric'
+                    }) : data.fullDate;
 
-                return (
-                  <div className="bg-white p-3 rounded shadow-sm border text-sm min-w-[200px]">
-                    <p className="text-gray-600 font-medium mb-2">{displayDate}</p>
-                    <div className="space-y-1">
-                      <div className="flex items-center gap-2">
-                        <span className="text-gray-700">Lumepall:</span>
-                        <span className="font-semibold">{data.actualSnobol?.toFixed(2)} EUR</span>
+                  return (
+                    <div className="bg-white p-3 rounded shadow-sm border text-sm min-w-[200px]">
+                      <p className="text-gray-600 font-medium mb-2">{displayDate}</p>
+                      <div className="space-y-1">
+                        <div className="flex items-center gap-2">
+                          <span className="text-gray-700">Lumepall:</span>
+                          <span className="font-semibold">{data.actualSnobol?.toFixed(2)} EUR</span>
+                        </div>
                       </div>
                     </div>
-                  </div>
-                );
-              }
-              return null;
-            }}
-          />
-          <Area
-            type="monotone"
-            dataKey="totalSnobol"
-            fill="#D1D2D3"
-            stroke="none"
-            isAnimationActive={!hasAnimated}
-            animationDuration={1000}
-          />
-          <Line
-            type="monotone"
-            dataKey="totalSnobol"
-            stroke="#000000"
-            strokeWidth={2}
-            dot={false}
-            activeDot={{ r: 4.5, fill: "white", stroke: "black", strokeWidth: 3.1 }}
-            isAnimationActive={!hasAnimated}
-            animationDuration={1000}
-          />
-        </LineChart>
-      </ResponsiveContainer>
+                  );
+                }
+                return null;
+              }}
+            />
+            <Area
+              type="monotone"
+              dataKey="totalSnobol"
+              fill="#D1D2D3"
+              stroke="none"
+              isAnimationActive={!hasAnimated}
+              animationDuration={1000}
+            />
+            <Line
+              type="monotone"
+              dataKey="totalSnobol"
+              stroke="#000000"
+              strokeWidth={2}
+              dot={false}
+              activeDot={{ r: 4.5, fill: "white", stroke: "black", strokeWidth: 3.1 }}
+              isAnimationActive={!hasAnimated}
+              animationDuration={1000}
+            />
+          </LineChart>
+        </ResponsiveContainer>
+      </div>
     </div>
   );
 });
@@ -661,7 +666,7 @@ export default function Homepage() {
   };
 
   const validateEmail = (email: string): boolean => {
-    const emailRegex = /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*\.[a-zA-Z]{2,63}$/;
+    const emailRegex = /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0, 61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0, 61}[a-zA-Z0-9])?)*\.[a-zA-Z]{2, 63}$/;
 
     if (!emailRegex.test(email)) {
       return false;
@@ -677,7 +682,7 @@ export default function Homepage() {
 
       if (domainParts.length >= 3 && domainParts[domainParts.length - 2] === 'co') {
         const countryCode = domainParts[domainParts.length - 1];
-        if (!/^[a-zA-Z]{2,10}$/.test(countryCode)) {
+        if (!/^[a-zA-Z]{2, 10}$/.test(countryCode)) {
           return false;
         }
       }
@@ -891,8 +896,7 @@ export default function Homepage() {
           <section className="mb-16">
             <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-4 gap-3 md:gap-0">
               <h2 className="text-xl md:text-2xl text-black" style={{ fontFamily: 'Avenir Light', fontWeight: 300 }}>
-                Total fund assets development
-              </h2>
+                Value development since the first investment</h2>
               <div className="flex items-center gap-2">
                 <button
                   onClick={() => setValueCurrency('EUR')}
