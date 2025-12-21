@@ -45,6 +45,13 @@ const PriceGraph = React.memo(function PriceGraph({ currentPrice = 1.7957, showD
   const [chartData, setChartData] = useState<ChartData[]>(() => {
     return formatAreaChartData()
   });
+  const [hasAnimated, setHasAnimated] = useState(false);
+
+  // Mark animation as complete after initial render
+  useEffect(() => {
+    const timer = setTimeout(() => setHasAnimated(true), 1500);
+    return () => clearTimeout(timer);
+  }, []);
 
   // Find the index where 2021 starts (fund begins)
   const dividerIndex = useMemo(() => {
@@ -204,6 +211,8 @@ const PriceGraph = React.memo(function PriceGraph({ currentPrice = 1.7957, showD
             dataKey="totalSnobol"
             fill="#D1D2D3"
             stroke="none"
+            isAnimationActive={!hasAnimated}
+            animationDuration={1000}
           />
           <Line
             type="monotone"
@@ -212,6 +221,8 @@ const PriceGraph = React.memo(function PriceGraph({ currentPrice = 1.7957, showD
             strokeWidth={2}
             dot={false}
             activeDot={{ r: 4.5, fill: "white", stroke: "black", strokeWidth: 3.1 }}
+            isAnimationActive={!hasAnimated}
+            animationDuration={1000}
           />
         </LineChart>
       </ResponsiveContainer>
@@ -234,6 +245,13 @@ const ValueGraph = React.memo(function ValueGraph({ currency }: ValueGraphProps)
   const [currentFundValue, setCurrentFundValue] = useState<number>(718); // Current value in thousands
   const [loading, setLoading] = useState(true);
   const [isMobile, setIsMobile] = useState(false);
+  const [hasAnimated, setHasAnimated] = useState(false);
+
+  // Mark animation as complete after initial render
+  useEffect(() => {
+    const timer = setTimeout(() => setHasAnimated(true), 1500);
+    return () => clearTimeout(timer);
+  }, []);
 
   // Detect mobile screen size
   useEffect(() => {
@@ -435,6 +453,8 @@ const ValueGraph = React.memo(function ValueGraph({ currency }: ValueGraphProps)
               fill="#D1D2D3"
               stroke="none"
               baseValue={0}
+              isAnimationActive={!hasAnimated}
+              animationDuration={1000}
             />
             <Line
               type="monotone"
@@ -443,6 +463,8 @@ const ValueGraph = React.memo(function ValueGraph({ currency }: ValueGraphProps)
               strokeWidth={2}
               dot={false}
               activeDot={{ r: 4.5, fill: "white", stroke: "black", strokeWidth: 3.1 }}
+              isAnimationActive={!hasAnimated}
+              animationDuration={1000}
             />
           </ComposedChart>
         </ResponsiveContainer>
@@ -594,9 +616,8 @@ export default function Homepage() {
     // Initial fetch
     fetchPriceData();
 
-    // Update every 1 second to show fluctuation
-    const interval = setInterval(fetchPriceData, 1000);
-
+    // Update every 5 seconds to show fluctuation
+    const interval = setInterval(fetchPriceData, 5000);
     return () => clearInterval(interval);
   }, []);
 
