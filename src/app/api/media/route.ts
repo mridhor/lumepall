@@ -7,6 +7,7 @@ export interface MediaItem {
   description?: string;
   type: 'video' | 'article';
   thumbnail_url?: string;
+  image_url?: string;
   video_url?: string;
   article_url?: string;
   slug?: string;

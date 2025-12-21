@@ -28,6 +28,7 @@ interface MediaItem {
   description?: string;
   type: 'video' | 'article';
   thumbnail_url?: string;
+  image_url?: string;
   video_url?: string;
   article_url?: string;
   slug?: string;
@@ -428,14 +429,17 @@ interface MediaCardProps {
 }
 
 const MediaCard = ({ item }: MediaCardProps) => {
+  // Use image_url as fallback for thumbnail_url
+  const imageUrl = item.thumbnail_url || item.image_url;
+
   // For articles with slug, use internal routing
   if (item.type === 'article' && item.slug) {
     return (
       <Link href={`/article/${item.slug}`} className="block">
         <div className="relative cursor-pointer group overflow-hidden rounded-lg bg-gray-100">
-          {item.thumbnail_url ? (
+          {imageUrl ? (
             <img
-              src={item.thumbnail_url}
+              src={imageUrl}
               alt={item.title}
               className="w-full h-40 object-cover transition-transform group-hover:scale-105"
             />
@@ -446,6 +450,9 @@ const MediaCard = ({ item }: MediaCardProps) => {
           )}
           <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-3">
             <p className="text-white text-sm font-medium line-clamp-2">{item.title}</p>
+            {item.description && (
+              <p className="text-white/70 text-xs line-clamp-2 mt-1">{item.description}</p>
+            )}
           </div>
         </div>
       </Link>
@@ -466,9 +473,9 @@ const MediaCard = ({ item }: MediaCardProps) => {
       className="relative cursor-pointer group overflow-hidden rounded-lg bg-gray-100"
       onClick={handleClick}
     >
-      {item.thumbnail_url ? (
+      {imageUrl ? (
         <img
-          src={item.thumbnail_url}
+          src={imageUrl}
           alt={item.title}
           className="w-full h-40 object-cover transition-transform group-hover:scale-105"
         />
@@ -486,6 +493,9 @@ const MediaCard = ({ item }: MediaCardProps) => {
       )}
       <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-3">
         <p className="text-white text-sm font-medium line-clamp-2">{item.title}</p>
+        {item.description && (
+          <p className="text-white/70 text-xs line-clamp-2 mt-1">{item.description}</p>
+        )}
       </div>
     </div>
   );
