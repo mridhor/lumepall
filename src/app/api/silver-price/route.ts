@@ -1,33 +1,73 @@
 import { NextRequest, NextResponse } from 'next/server';
 
-// Cache structure
-let priceCache = {
-  price: 0,
-  timestamp: 0,
-  currency: 'USD'
-};
+// Scheduled update times in UTC (corresponding to 9 AM, 1 PM, 5 PM UTC-3)
+// UTC-3 is UTC - 3 hours.
+// 09:00 UTC-3 = 12:00 UTC
+// 13:00 UTC-3 = 16:00 UTC
+// 17:00 UTC-3 = 20:00 UTC
+const UPDATE_SLOTS_UTC = [12, 16, 20];
 
-// Cache duration in milliseconds (e.g., 5 minutes to respect free tier limits)
-const CACHE_DURATION = 5 * 60 * 1000;
+// Helper to get the latest checkpoint timestamp that has passed
+function getLatestCheckpoint(now: number): number {
+  const date = new Date(now);
+  const currentHour = date.getUTCHours();
+
+  // Find the latest slot that has passed today
+  // Sort slots descending
+  const passedSlots = UPDATE_SLOTS_UTC.filter(slot => slot <= currentHour).sort((a, b) => b - a);
+
+  if (passedSlots.length > 0) {
+    // Latest slot today
+    const checkpoint = new Date(now);
+    checkpoint.setUTCHours(passedSlots[0], 0, 0, 0);
+    return checkpoint.getTime();
+  } else {
+    // No slots passed today yet, so the latest was the last slot of yesterday (20:00 UTC)
+    const checkpoint = new Date(now);
+    checkpoint.setDate(checkpoint.getDate() - 1);
+    checkpoint.setUTCHours(UPDATE_SLOTS_UTC[UPDATE_SLOTS_UTC.length - 1], 0, 0, 0);
+    return checkpoint.getTime();
+  }
+}
 
 export async function GET(request: NextRequest) {
   try {
     const apiKey = process.env.SILVER_API_KEY;
     const now = Date.now();
 
-    // Check cache validity
-    if (priceCache.price > 0 && (now - priceCache.timestamp < CACHE_DURATION)) {
+    // 1. Fetch current stored parameters (price + last_updated)
+    const paramsUrl = new URL('/api/fund-params', request.url).toString();
+    const paramsRes = await fetch(paramsUrl, { cache: 'no-store' });
+    const paramsData = await paramsRes.json();
+
+    let currentStoredPrice = 31.25;
+    let lastUpdatedTs = 0;
+    let currentParams = {};
+
+    if (paramsData.success) {
+      currentStoredPrice = paramsData.silver_price_usd || 31.25;
+      lastUpdatedTs = paramsData.last_updated ? new Date(paramsData.last_updated).getTime() : 0;
+      currentParams = paramsData;
+    }
+
+    // 2. Check if we need to update
+    const latestCheckpoint = getLatestCheckpoint(now);
+    const needsUpdate = lastUpdatedTs < latestCheckpoint;
+
+    // If no update needed, return stored price
+    if (!needsUpdate) {
       return NextResponse.json({
         success: true,
-        silverPrice: priceCache.price,
-        currency: priceCache.currency,
+        silverPrice: currentStoredPrice,
+        currency: 'USD',
         unit: 'troy_ounce',
-        timestamp: priceCache.timestamp,
-        source: 'cache',
+        timestamp: lastUpdatedTs,
+        source: 'stored_db',
+        nextUpdate: 'Next scheduled slot'
       });
     }
 
-    // If API key is present, fetch from GoldAPI
+    // 3. Update needed: Fetch from GoldAPI
     if (apiKey) {
       try {
         const response = await fetch('https://www.goldapi.io/api/XAG/USD', {
@@ -35,69 +75,60 @@ export async function GET(request: NextRequest) {
             'x-access-token': apiKey,
             'Content-Type': 'application/json'
           },
-          next: { revalidate: 300 } // Next.js cache
+          next: { revalidate: 0 } // No caching for the external call itself
         });
 
         if (response.ok) {
           const data = await response.json();
-          // data format: { timestamp: ..., metal: "XAG", currency: "USD", exchange: "...", symbol: "...", prev_close_price: ..., open_price: ..., low_price: ..., high_price: ..., open_time: ..., price: 31.45, ch: ..., chp: ..., ask: ..., bid: ... }
-
           if (data.price) {
-            // Update cache
-            priceCache = {
-              price: data.price,
-              timestamp: now,
-              currency: 'USD'
-            };
+            const newPrice = data.price;
+
+            // 4. Update the database with new price
+            // We need to send all params back to POST
+            if (paramsData.success) {
+              await fetch(paramsUrl, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                  base_fund_value: paramsData.base_fund_value,
+                  silver_troy_ounces: paramsData.silver_troy_ounces,
+                  base_share_price: paramsData.base_share_price,
+                  silver_price_usd: newPrice
+                  // updated_at will be set by the POST handler
+                })
+              });
+            }
 
             return NextResponse.json({
               success: true,
-              silverPrice: data.price,
+              silverPrice: newPrice,
               currency: 'USD',
               unit: 'troy_ounce',
               timestamp: now,
-              source: 'goldapi',
+              source: 'goldapi_live_update',
             });
           }
         } else {
-          console.error('GoldAPI error:', response.status, response.statusText);
+          console.error('GoldAPI error:', response.status);
         }
       } catch (apiError) {
         console.error('Failed to fetch from GoldAPI:', apiError);
       }
     }
 
-    // Fallback: Fetch manually set price from fund parameters
-    const response = await fetch(
-      new URL('/api/fund-params', request.url).toString(),
-      { cache: 'no-store' }
-    );
-
-    const data = await response.json();
-
-    if (data.success && data.silver_price_usd) {
-      return NextResponse.json({
-        success: true,
-        silverPrice: data.silver_price_usd,
-        currency: 'USD',
-        unit: 'troy_ounce',
-        timestamp: Date.now(),
-        source: 'manual_fallback',
-      });
-    }
-
-    // Final fallback
+    // Fallback if API failed or no key: Return stored price
     return NextResponse.json({
       success: true,
-      silverPrice: 31.25,
+      silverPrice: currentStoredPrice,
       currency: 'USD',
       unit: 'troy_ounce',
-      timestamp: Date.now(),
-      source: 'default',
+      timestamp: lastUpdatedTs,
+      source: 'fallback_stored',
+      message: 'Update failed or API key missing'
     });
+
   } catch (error) {
     console.error('Error in silver-price API:', error);
-
     return NextResponse.json({
       success: true,
       silverPrice: 31.25,
