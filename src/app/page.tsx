@@ -435,7 +435,7 @@ const ValueGraph = React.memo(function ValueGraph({ currency }: ValueGraphProps)
               dataKey="date"
               axisLine={false}
               tickLine={false}
-              tick={{ fontSize: isMobile ? 10 : 11, fill: '#9ca3af', fontWeight: 400 }}
+              tick={{ fontSize: isMobile ? 10 : 11, fill: '#6b7280', fontWeight: 500 }}
               ticks={(() => {
                 // Use index-based distribution for even spacing
                 const tickCount = isMobile ? 5 : 10;
@@ -462,7 +462,7 @@ const ValueGraph = React.memo(function ValueGraph({ currency }: ValueGraphProps)
             <YAxis
               axisLine={false}
               tickLine={false}
-              tick={{ fontSize: isMobile ? 9 : 11, fill: '#9ca3af', fontWeight: 400 }}
+              tick={{ fontSize: isMobile ? 9 : 11, fill: '#6b7280', fontWeight: 500 }}
               tickFormatter={(value) => `${currencySymbol}${value}k`}
               width={isMobile ? 40 : 50}
               domain={[0, yAxisMax]}

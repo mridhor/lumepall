@@ -86,9 +86,6 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({ currentPrice, onPriceU
               <div className="text-4xl font-medium text-black">
                 {currentPrice.toFixed(4)} <span className="text-lg text-gray-500 font-normal">EUR</span>
               </div>
-              <p className="text-gray-500 text-xs mt-2">
-                Fluctuates <span className="font-medium text-gray-700">±€0.002-0.008</span> around base
-              </p>
             </div>
 
             {/* Fund Composition Visualization */}
