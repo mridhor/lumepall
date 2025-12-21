@@ -9,6 +9,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({ currentPrice, onPriceU
   const [priceInput, setPriceInput] = useState(currentPrice);
   const [baseFundValue, setBaseFundValue] = useState(500000);
   const [silverTroyOunces, setSilverTroyOunces] = useState(5000);
+  const [silverPriceUSD, setSilverPriceUSD] = useState(31.25);
   const [message, setMessage] = useState("");
   const [fundMessage, setFundMessage] = useState("");
 
@@ -21,6 +22,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({ currentPrice, onPriceU
         if (data.success) {
           setBaseFundValue(data.base_fund_value);
           setSilverTroyOunces(data.silver_troy_ounces);
+          setSilverPriceUSD(data.silver_price_usd || 31.25);
         }
       } catch (error) {
         console.error('Failed to fetch fund parameters:', error);
@@ -39,7 +41,9 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({ currentPrice, onPriceU
   };
 
   const handleFundParamsUpdate = async () => {
-    if (!isNaN(baseFundValue) && baseFundValue >= 0 && !isNaN(silverTroyOunces) && silverTroyOunces >= 0) {
+    if (!isNaN(baseFundValue) && baseFundValue >= 0 &&
+        !isNaN(silverTroyOunces) && silverTroyOunces >= 0 &&
+        !isNaN(silverPriceUSD) && silverPriceUSD > 0) {
       try {
         const response = await fetch('/api/fund-params', {
           method: 'POST',
@@ -49,6 +53,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({ currentPrice, onPriceU
           body: JSON.stringify({
             base_fund_value: baseFundValue,
             silver_troy_ounces: silverTroyOunces,
+            silver_price_usd: silverPriceUSD,
           }),
         });
 
@@ -126,6 +131,20 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({ currentPrice, onPriceU
             />
             <span style={{ fontSize: "0.85rem", color: "#666", marginTop: "0.25rem" }}>
               Physical silver held in Troy ounces
+            </span>
+          </label>
+
+          <label style={{ display: "flex", flexDirection: "column" }}>
+            Silver Price (USD per Troy Ounce):
+            <input
+              type="number"
+              step="0.01"
+              value={silverPriceUSD}
+              onChange={(e) => setSilverPriceUSD(parseFloat(e.target.value))}
+              style={{ marginTop: "0.25rem", padding: "0.5rem", width: "200px" }}
+            />
+            <span style={{ fontSize: "0.85rem", color: "#666", marginTop: "0.25rem" }}>
+              Current silver spot price (set manually)
             </span>
           </label>
 

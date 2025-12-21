@@ -23,6 +23,7 @@ async function getSupabaseClient(): Promise<SupabaseClient | null> {
 const fallbackFundParams = {
   base_fund_value: 500000, // Base fund value in EUR (non-silver portion)
   silver_troy_ounces: 5000, // Silver holdings in Troy ounces
+  silver_price_usd: 31.25, // Manual silver price in USD per Troy ounce
   last_updated: new Date().toISOString(),
 };
 
@@ -57,6 +58,7 @@ export async function GET(request: NextRequest) {
       success: true,
       base_fund_value: Number(data.base_fund_value),
       silver_troy_ounces: Number(data.silver_troy_ounces),
+      silver_price_usd: Number(data.silver_price_usd || 31.25),
       last_updated: data.updated_at || data.created_at,
     });
   } catch (error) {
@@ -70,11 +72,12 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
-    const { base_fund_value, silver_troy_ounces } = await request.json();
+    const { base_fund_value, silver_troy_ounces, silver_price_usd } = await request.json();
 
     if (
       typeof base_fund_value !== 'number' ||
-      typeof silver_troy_ounces !== 'number'
+      typeof silver_troy_ounces !== 'number' ||
+      typeof silver_price_usd !== 'number'
     ) {
       return NextResponse.json(
         { error: 'Invalid parameters' },
@@ -87,6 +90,7 @@ export async function POST(request: NextRequest) {
       // Update fallback data for development
       fallbackFundParams.base_fund_value = base_fund_value;
       fallbackFundParams.silver_troy_ounces = silver_troy_ounces;
+      fallbackFundParams.silver_price_usd = silver_price_usd;
       fallbackFundParams.last_updated = new Date().toISOString();
 
       return NextResponse.json({
@@ -104,6 +108,7 @@ export async function POST(request: NextRequest) {
           id: 1, // Single row for fund parameters
           base_fund_value,
           silver_troy_ounces,
+          silver_price_usd,
           updated_at: new Date().toISOString(),
         },
         { onConflict: 'id' }
