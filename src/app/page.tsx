@@ -227,6 +227,15 @@ const ValueGraph = React.memo(function ValueGraph({ currency }: ValueGraphProps)
     return formatAreaChartData();
   });
   const [loading, setLoading] = useState(true);
+  const [isMobile, setIsMobile] = useState(false);
+
+  // Detect mobile screen size
+  useEffect(() => {
+    const checkMobile = () => setIsMobile(window.innerWidth < 768);
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
 
   // Find the index where 2021 starts (fund begins)
   const dividerIndex = useMemo(() => {
@@ -335,23 +344,38 @@ const ValueGraph = React.memo(function ValueGraph({ currency }: ValueGraphProps)
               dataKey="date"
               axisLine={false}
               tickLine={false}
-              tick={{ fontSize: 11, fill: '#9ca3af' }}
-              interval={Math.floor(displayData.length / 10)}
+              tick={{ fontSize: isMobile ? 10 : 11, fill: '#9ca3af' }}
+              ticks={(() => {
+                // Use index-based distribution for even spacing
+                const tickCount = isMobile ? 5 : 10;
+                const step = Math.floor(displayData.length / tickCount);
+                const yearTicks: string[] = [];
+                for (let i = 0; i < tickCount; i++) {
+                  const index = i * step;
+                  if (displayData[index]) {
+                    yearTicks.push(displayData[index].date);
+                  }
+                }
+                // Always include the last data point
+                if (displayData.length > 0) {
+                  yearTicks.push(displayData[displayData.length - 1].date);
+                }
+                return yearTicks;
+              })()}
               tickFormatter={(value) => {
                 const match = value.match(/\d{4}/);
-                return match ? match[0] : value;
+                if (!match) return value;
+                return isMobile ? `'${match[0].slice(2)}` : match[0];
               }}
             />
             <YAxis
               axisLine={false}
               tickLine={false}
-              tick={{ fontSize: 11, fill: '#9ca3af' }}
+              tick={{ fontSize: isMobile ? 9 : 11, fill: '#9ca3af' }}
               tickFormatter={(value) => `${currencySymbol}${value.toFixed(1)}`}
-              width={45}
-              domain={[0, currency === 'USD' ? 2.0 : 2.0]}
-              ticks={currency === 'USD'
-                ? [0, 0.5, 1.0, 1.5, 2.0]
-                : [0, 0.5, 1.0, 1.5, 2.0]}
+              width={isMobile ? 35 : 45}
+              domain={[0, 2.0]}
+              ticks={[0, 0.5, 1.0, 1.5, 2.0]}
             />
             <Tooltip
               content={({ active, payload }) => {
@@ -800,7 +824,7 @@ export default function Homepage() {
 
           {/* SECTION 3: Value Graph with Dual Currency */}
           <section className="mb-16">
-            <div className="flex items-center justify-between mb-4">
+            <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-4 gap-3 md:gap-0">
               <h2 className="text-xl md:text-2xl text-black" style={{ fontFamily: 'Avenir Light', fontWeight: 300 }}>
                 Value development since the first investment
               </h2>

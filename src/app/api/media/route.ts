@@ -18,9 +18,11 @@ export interface MediaItem {
 
 export async function GET() {
   // Check if Supabase is configured
+  console.log('Media API - Supabase configured:', isSupabaseConfigured);
+
   if (!isSupabaseConfigured || !supabase) {
     console.log('Supabase not configured, returning empty media array');
-    return NextResponse.json({ media: [] });
+    return NextResponse.json({ media: [], debug: 'supabase_not_configured' });
   }
 
   try {
@@ -33,14 +35,14 @@ export async function GET() {
 
     if (error) {
       console.error('Supabase error:', error);
-      return NextResponse.json({ media: [] });
+      return NextResponse.json({ media: [], debug: 'supabase_query_error', error: error.message });
     }
 
     console.log('Fetched media from Supabase:', data?.length || 0, 'items');
     return NextResponse.json({ media: data || [] });
   } catch (error) {
     console.error('Failed to fetch media:', error);
-    return NextResponse.json({ media: [] });
+    return NextResponse.json({ media: [], debug: 'catch_error' });
   }
 }
 
