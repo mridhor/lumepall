@@ -260,7 +260,13 @@ const ValueGraph = React.memo(function ValueGraph({ currency }: ValueGraphProps)
         const data = await response.json();
 
         if (data.success && data.fundAssets) {
-          setFundAssets(data.fundAssets);
+          // Ensure data is sorted chronologically (additional safeguard)
+          const sortedAssets = [...data.fundAssets].sort((a, b) => {
+            const dateA = new Date(a.date).getTime();
+            const dateB = new Date(b.date).getTime();
+            return dateA - dateB;
+          });
+          setFundAssets(sortedAssets);
         }
       } catch (error) {
         console.error('Failed to load fund assets data', error);
