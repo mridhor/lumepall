@@ -21,12 +21,12 @@ async function getSupabaseClient(): Promise<SupabaseClient | null> {
 
 // Fallback: Simple in-memory storage for development
 const fallbackPriceData: { currentPrice: number | null; currentSP500Price: number } = {
-  currentPrice: 1.7957,
+  currentPrice: 1.824,
   currentSP500Price: 3.30
 };
 
 // Default fallback values
-const DEFAULT_PRICE = 1.7957;
+const DEFAULT_PRICE = 1.824;
 const DEFAULT_SP500_PRICE = 3.30;
 
 function getDateRange(period?: string) {
@@ -104,7 +104,7 @@ export async function GET(request: NextRequest) {
         .limit(1)
         .maybeSingle();
       if (equityRow?.total_equity != null) equity = Number(equityRow.total_equity);
-    } catch {}
+    } catch { }
 
     // Optional historical series for selected period if a table exists
     interface HistoryPoint { date: string; snobol: number; sp500: number }
@@ -118,7 +118,7 @@ export async function GET(request: NextRequest) {
           .lte('date', range.to)
           .order('date', { ascending: true });
         if (Array.isArray(hist)) history = hist as HistoryPoint[];
-      } catch {}
+      } catch { }
     }
 
     return NextResponse.json({
@@ -142,14 +142,14 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const { currentPrice: newPrice, currentSP500Price: newSP500Price } = await request.json();
-    
+
     // Validate the price values and set minimum to 0.01
-    const validatedPrice = typeof newPrice === 'number' && newPrice >= 0 
-      ? (newPrice === 0 ? 0.01 : newPrice) 
+    const validatedPrice = typeof newPrice === 'number' && newPrice >= 0
+      ? (newPrice === 0 ? 0.01 : newPrice)
       : DEFAULT_PRICE;
-    
-    const validatedSP500Price = typeof newSP500Price === 'number' && newSP500Price >= 0 
-      ? (newSP500Price === 0 ? 0.01 : newSP500Price) 
+
+    const validatedSP500Price = typeof newSP500Price === 'number' && newSP500Price >= 0
+      ? (newSP500Price === 0 ? 0.01 : newSP500Price)
       : DEFAULT_SP500_PRICE;
 
     // If Supabase is not configured, use fallback storage
@@ -179,7 +179,7 @@ export async function POST(request: NextRequest) {
     if (upsertHistErr) {
       console.error('Supabase lumepall_history upsert error:', upsertHistErr);
     }
-    
+
     return NextResponse.json({
       success: true,
       currentPrice: validatedPrice,
