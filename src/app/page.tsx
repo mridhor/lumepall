@@ -218,15 +218,18 @@ const PriceGraph = React.memo(function PriceGraph({ currentPrice = 1.7957, showD
   );
 });
 
-// Value Graph Component with dual currency support
+// Fund Assets Graph Component - Shows total fund assets over time
 interface ValueGraphProps {
   currency: 'EUR' | 'USD';
 }
 
+interface FundAssetData {
+  date: string;
+  total_assets: number;
+}
+
 const ValueGraph = React.memo(function ValueGraph({ currency }: ValueGraphProps) {
-  const [chartData, setChartData] = useState<ChartData[]>(() => {
-    return formatAreaChartData();
-  });
+  const [fundAssets, setFundAssets] = useState<FundAssetData[]>([]);
   const [loading, setLoading] = useState(true);
   const [isMobile, setIsMobile] = useState(false);
 
@@ -238,89 +241,43 @@ const ValueGraph = React.memo(function ValueGraph({ currency }: ValueGraphProps)
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
 
-  // Find the index where 2021 starts (fund begins)
-  const dividerIndex = useMemo(() => {
-    return chartData.findIndex(item => item.fullDate?.includes('2021') && !item.fullDate?.includes('2020'));
-  }, [chartData]);
-
-  const dividerDate = useMemo(() => {
-    if (dividerIndex >= 0 && chartData[dividerIndex]) {
-      return chartData[dividerIndex].date;
-    }
-    return null;
-  }, [chartData, dividerIndex]);
-
   // Convert data based on currency
   const displayData = useMemo(() => {
     if (currency === 'USD') {
-      return chartData.map(item => ({
+      return fundAssets.map(item => ({
         ...item,
-        totalSnobol: item.totalSnobol ? item.totalSnobol * EUR_TO_USD : item.totalSnobol,
-        actualSnobol: item.actualSnobol ? item.actualSnobol * EUR_TO_USD : item.actualSnobol
+        total_assets: item.total_assets * EUR_TO_USD
       }));
     }
-    return chartData;
-  }, [chartData, currency]);
+    return fundAssets;
+  }, [fundAssets, currency]);
 
   useEffect(() => {
     const fetchData = async () => {
       setLoading(true);
       try {
-        // Fetch without period filter to get ALL historical data (2015-2025)
-        const [sp500Res, priceRes] = await Promise.all([
-          fetch('/api/sp500-price'),
-          fetch('/api/price')
-        ]);
+        const response = await fetch('/api/fund-assets');
+        const data = await response.json();
 
-        const [sp500Data, priceData] = await Promise.all([
-          sp500Res.json(),
-          priceRes.json()
-        ]);
-
-        const sp500Baseline = sp500Data?.baselinePrice ?? 1697.48;
-
-        const updatedFormatted = (sp500Data?.updatedData || []).map(
-          (item: { date: string; sp500: number; snobol: number }, index: number) => {
-            const isLatest = index === (sp500Data?.updatedData?.length || 1) - 1;
-            const actualSp500 = isLatest ? sp500Data.actualPrice : item.sp500 * sp500Baseline;
-            const actualSnobol = isLatest
-              ? (priceData.currentPrice ?? sp500Data.currentSnobolPrice ?? 1.7957)
-              : item.snobol;
-            return {
-              date: item.date,
-              fullDate: item.date,
-              sp500: actualSp500 / sp500Baseline,
-              totalSnobol: actualSnobol,
-              actualSp500,
-              actualSnobol
-            } as ChartData;
-          }
-        );
-
-        setChartData(updatedFormatted);
+        if (data.success && data.fundAssets) {
+          setFundAssets(data.fundAssets);
+        }
       } catch (error) {
-        console.error('Failed to load value graph data', error);
+        console.error('Failed to load fund assets data', error);
       } finally {
         setLoading(false);
       }
     };
 
     fetchData();
-
-    const channel = new BroadcastChannel('price-updates');
-    channel.addEventListener('message', (event) => {
-      if (event.data === 'price-changed') {
-        fetchData();
-      }
-    });
-
-    return () => {
-      channel.close();
-    };
   }, []);
 
   const currencySymbol = currency === 'EUR' ? '€' : '$';
-  const latestValue = displayData[displayData.length - 1]?.actualSnobol ?? 0;
+  const latestValue = displayData[displayData.length - 1]?.total_assets ?? 0;
+
+  // Calculate Y-axis domain based on data
+  const maxValue = Math.max(...displayData.map(d => d.total_assets), 0);
+  const yAxisMax = Math.ceil(maxValue / 100) * 100 + 100;
 
   if (loading) {
     return (
@@ -333,7 +290,7 @@ const ValueGraph = React.memo(function ValueGraph({ currency }: ValueGraphProps)
   return (
     <div className="w-full h-full flex flex-col">
       <div className="text-2xl md:text-3xl mb-[30px]" style={{ fontFamily: 'Avenir Light', fontWeight: 300 }}>
-        {currencySymbol}{latestValue.toFixed(2)}
+        {currencySymbol}{latestValue.toFixed(0)}k
       </div>
       <div className="flex-1 min-h-[300px]">
         <ResponsiveContainer width="100%" height="100%">
@@ -373,27 +330,20 @@ const ValueGraph = React.memo(function ValueGraph({ currency }: ValueGraphProps)
               axisLine={false}
               tickLine={false}
               tick={{ fontSize: isMobile ? 9 : 11, fill: '#9ca3af' }}
-              tickFormatter={(value) => `${currencySymbol}${value.toFixed(1)}`}
-              width={isMobile ? 35 : 45}
-              domain={[0, 2.0]}
-              ticks={[0, 0.5, 1.0, 1.5, 2.0]}
+              tickFormatter={(value) => `${currencySymbol}${value}k`}
+              width={isMobile ? 40 : 50}
+              domain={[0, yAxisMax]}
             />
             <Tooltip
               content={({ active, payload }) => {
                 if (active && payload && payload.length) {
-                  const first = payload[0];
-                  const data = (first && 'payload' in first ? (first as { payload: ChartData }).payload : undefined);
-                  if (!data) return null;
-                  const isLatest = data === displayData[displayData.length - 1];
-                  const displayDate = isLatest
-                    ? new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
-                    : data.fullDate;
+                  const data = payload[0].payload as FundAssetData;
                   return (
                     <div className="bg-white p-3 rounded shadow-sm border text-sm min-w-[180px]">
-                      <p className="text-gray-600 font-medium mb-2">{displayDate}</p>
+                      <p className="text-gray-600 font-medium mb-2">{data.date}</p>
                       <div className="flex items-center gap-2">
-                        <span className="text-gray-700">Value:</span>
-                        <span className="font-semibold">{currencySymbol}{data.actualSnobol?.toFixed(2)}</span>
+                        <span className="text-gray-700">Total Assets:</span>
+                        <span className="font-semibold">{currencySymbol}{data.total_assets.toFixed(0)}k</span>
                       </div>
                     </div>
                   );
@@ -403,14 +353,14 @@ const ValueGraph = React.memo(function ValueGraph({ currency }: ValueGraphProps)
             />
             <Area
               type="monotone"
-              dataKey="totalSnobol"
+              dataKey="total_assets"
               fill="#D1D2D3"
               stroke="none"
-              baseValue="dataMin"
+              baseValue={0}
             />
             <Line
               type="monotone"
-              dataKey="totalSnobol"
+              dataKey="total_assets"
               stroke="#000000"
               strokeWidth={2}
               dot={false}
@@ -829,11 +779,11 @@ export default function Homepage() {
             </div>
           </section>
 
-          {/* SECTION 3: Value Graph with Dual Currency */}
+          {/* SECTION 3: Fund Total Assets Graph with Dual Currency */}
           <section className="mb-16">
             <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-4 gap-3 md:gap-0">
               <h2 className="text-xl md:text-2xl text-black" style={{ fontFamily: 'Avenir Light', fontWeight: 300 }}>
-                Value development since the first investment
+                Total fund assets development
               </h2>
               <div className="flex items-center gap-2">
                 <button
