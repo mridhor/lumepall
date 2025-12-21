@@ -3,9 +3,8 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Label } from '@/components/ui/label';
+import { AdminPortal } from '@/components/AdminPortal';
 
 interface Subscriber {
   id: string;
@@ -13,20 +12,12 @@ interface Subscriber {
   subscribed_at: string;
 }
 
-interface PriceData {
-  currentPrice: number | string;
-  currentSP500Price: number | string;
-}
-
 export default function AdminDashboard() {
   const [subscribers, setSubscribers] = useState<Subscriber[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [total, setTotal] = useState(0);
-  const [priceData, setPriceData] = useState<PriceData>({ currentPrice: 18.49, currentSP500Price: 3.30 });
-  const [priceLoading, setPriceLoading] = useState(false);
-  const [priceError, setPriceError] = useState('');
-  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+  const [currentSharePrice, setCurrentSharePrice] = useState(1.80);
   const router = useRouter();
 
   const fetchSubscribers = useCallback(async () => {
@@ -57,103 +48,32 @@ export default function AdminDashboard() {
     }
   }, [router]);
 
-  const fetchPriceData = useCallback(async () => {
+  // Fetch current share price for AdminPortal
+  const fetchSharePrice = useCallback(async () => {
     try {
-      const response = await fetch('/api/price');
+      const response = await fetch('/api/share-price');
       const data = await response.json();
-      
-      if (response.ok) {
-        setPriceData(data);
-        setPriceError(''); // Clear any previous errors
-      } else {
-        console.error('Price API error:', data.error);
-        setPriceError(data.error || 'Failed to fetch price data');
+      if (data.success && data.sharePrice) {
+        setCurrentSharePrice(data.sharePrice);
       }
     } catch (error) {
-      console.error('Price fetch error:', error);
-      setPriceError('Network error. Please check your connection and try again.');
+      console.error('Failed to fetch share price:', error);
     }
   }, []);
 
-  const handlePriceChange = (field: 'currentPrice' | 'currentSP500Price', value: string) => {
-    // Allow typing any value, including empty string and partial numbers
-    // Don't convert to number immediately - let user type freely
-    setPriceData(prev => ({ ...prev, [field]: value }));
-    setHasUnsavedChanges(true);
-  };
-
-  const handlePriceBlur = (field: 'currentPrice' | 'currentSP500Price') => {
-    // Format to 2 decimal places when user finishes typing
-    const currentValue = priceData[field];
-    const numValue = typeof currentValue === 'string' ? parseFloat(currentValue) || 0 : currentValue;
-    
-    // If value is 0, set to minimum of 0.01
-    const finalValue = numValue === 0 ? 0.01 : numValue;
-    const formattedValue = parseFloat(finalValue.toFixed(2));
-    setPriceData(prev => ({ ...prev, [field]: formattedValue }));
-  };
-
-  const handleSaveChanges = async () => {
-    setPriceLoading(true);
-    setPriceError('');
-    
-    try {
-      const response = await fetch('/api/price', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          currentPrice: (() => {
-            const value = typeof priceData.currentPrice === 'string' ? parseFloat(priceData.currentPrice) || 0 : priceData.currentPrice;
-            return value === 0 ? 0.01 : value;
-          })(),
-          currentSP500Price: (() => {
-            const value = typeof priceData.currentSP500Price === 'string' ? parseFloat(priceData.currentSP500Price) || 0 : priceData.currentSP500Price;
-            return value === 0 ? 0.01 : value;
-          })()
-        }),
-      });
-      
-      const data = await response.json();
-      
-      if (response.ok) {
-        // Show success message briefly
-        setPriceError('');
-        setHasUnsavedChanges(false);
-        
-        // Notify main page of price update using BroadcastChannel
-        try {
-          const channel = new BroadcastChannel('price-updates');
-          channel.postMessage('price-changed');
-          channel.close();
-          console.log('Price update notification sent via BroadcastChannel');
-        } catch {
-          console.log('BroadcastChannel not supported, using fallback');
-        }
-        
-        // Fallback: Use localStorage to notify other tabs/windows
-        localStorage.setItem('priceUpdate', Date.now().toString());
-        localStorage.removeItem('priceUpdate');
-        
-        // Fallback: Dispatch custom event for same tab
-        window.dispatchEvent(new Event('priceUpdated'));
-        console.log('Price update notification sent via fallback methods');
-      } else {
-        setPriceError(data.error || 'Failed to update prices');
-      }
-    } catch {
-      setPriceError('Failed to update prices');
-    } finally {
-      setPriceLoading(false);
-    }
+  const handlePriceUpdate = (newPrice: number) => {
+    setCurrentSharePrice(newPrice);
   };
 
 
   useEffect(() => {
     fetchSubscribers();
-    fetchPriceData();
-  }, [fetchSubscribers, fetchPriceData]);
+    fetchSharePrice();
+
+    // Update share price every second to show fluctuation
+    const interval = setInterval(fetchSharePrice, 1000);
+    return () => clearInterval(interval);
+  }, [fetchSubscribers, fetchSharePrice]);
 
   const handleLogout = async () => {
     try {
@@ -215,61 +135,13 @@ export default function AdminDashboard() {
           </div>
         </div>
 
-        {/* Price Management Section */}
-        <Card className="mb-8 overflow-hidden border-gray-200 bg-white">
-          <CardHeader className="bg-white">
-            <CardTitle className="text-xl font-bold">Price Management</CardTitle>
-          </CardHeader>
-          <CardContent>
-            {priceError && (
-              <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded mb-4 font-medium">
-                {priceError}
-              </div>
-            )}
-            
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {/* Current Price */}
-              <div className="space-y-2 border-gray-200 border-sm rounded">
-                <Label htmlFor="currentPrice" className="font-semibold">Lumepall Current Price</Label>
-                <Input
-                  id="currentPrice"
-                  className="bg-white border-gray-200 border-sm rounded font-semibold"
-                  type="number"
-                  step="0.01"
-                  min="0"
-                  max="9999.99"
-                  value={typeof priceData.currentPrice === 'string' ? priceData.currentPrice : (priceData.currentPrice === 0 ? '' : priceData.currentPrice.toFixed(2))}
-                  onChange={(e) => handlePriceChange('currentPrice', e.target.value)}
-                  onBlur={() => handlePriceBlur('currentPrice')}
-                  disabled={priceLoading}
-                  placeholder="1.7957"
-                />
-                <p className="text-xs text-muted-foreground font-medium">Type the price value (min: 0.01, max: 9999.99)</p>
-              </div>
-            </div>
-            
-            {/* Save Changes Button */}
-            {hasUnsavedChanges && (
-              <div className="mt-6 flex justify-end">
-                  <Button
-                    onClick={handleSaveChanges}
-                    disabled={priceLoading}
-                    variant="default"
-                    className="min-w-[120px] font-semibold bg-black text-white hover:bg-gray-800"
-                  >
-                  {priceLoading ? (
-                    <>
-                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-current mr-2"></div>
-                      Saving...
-                    </>
-                  ) : (
-                    'Save Changes'
-                  )}
-                  </Button>
-              </div>
-            )}
-          </CardContent>
-        </Card>
+        {/* Fund Parameters Management */}
+        <div className="mb-8">
+          <AdminPortal
+            currentPrice={currentSharePrice}
+            onPriceUpdate={handlePriceUpdate}
+          />
+        </div>
 
         {error && (
           <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded mb-6 font-medium">
