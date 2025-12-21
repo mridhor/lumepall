@@ -90,15 +90,8 @@ const PriceGraph = React.memo(function PriceGraph({ currentPrice = 1.7957, showD
           };
         });
 
-        // Filter to show only data from April 2021 onwards (fund's active period)
-        const april2021Start = new Date('2021-04-01').getTime();
-        const filteredData = updatedFormattedData.filter((item: ChartData) => {
-          const itemDate = new Date(item.fullDate).getTime();
-          return !isNaN(itemDate) && itemDate >= april2021Start;
-        });
-
         if (isMounted) {
-          setChartData(filteredData);
+          setChartData(updatedFormattedData);
         }
       } catch (error) {
         console.error('Failed to fetch prices:', error);
@@ -329,17 +322,37 @@ const ValueGraph = React.memo(function ValueGraph({ currency }: ValueGraphProps)
 
   return (
     <div className="w-full h-full flex flex-col">
-      <div className="text-2xl md:text-3xl mb-2" style={{ fontFamily: 'Avenir Light', fontWeight: 300 }}>
+      <div className="text-2xl md:text-3xl mb-[30px]" style={{ fontFamily: 'Avenir Light', fontWeight: 300 }}>
         {currencySymbol}{latestValue.toFixed(2)}
       </div>
-      <div className="flex-1 min-h-[200px]">
+      <div className="flex-1 min-h-[300px]">
         <ResponsiveContainer width="100%" height="100%">
           <ComposedChart
             data={displayData}
-            margin={{ top: 5, right: 5, left: 5, bottom: 5 }}
+            margin={{ top: 5, right: 10, left: 10, bottom: 20 }}
           >
-            <XAxis dataKey="date" axisLine={false} tickLine={false} tick={false} hide />
-            <YAxis axisLine={false} tickLine={false} tick={false} hide />
+            <XAxis
+              dataKey="date"
+              axisLine={false}
+              tickLine={false}
+              tick={{ fontSize: 11, fill: '#9ca3af' }}
+              interval={Math.floor(displayData.length / 10)}
+              tickFormatter={(value) => {
+                const match = value.match(/\d{4}/);
+                return match ? match[0] : value;
+              }}
+            />
+            <YAxis
+              axisLine={false}
+              tickLine={false}
+              tick={{ fontSize: 11, fill: '#9ca3af' }}
+              tickFormatter={(value) => `${currencySymbol}${value.toFixed(1)}`}
+              width={45}
+              domain={[0, currency === 'USD' ? 2.0 : 2.0]}
+              ticks={currency === 'USD'
+                ? [0, 0.5, 1.0, 1.5, 2.0]
+                : [0, 0.5, 1.0, 1.5, 2.0]}
+            />
             <Tooltip
               content={({ active, payload }) => {
                 if (active && payload && payload.length) {
