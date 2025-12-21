@@ -147,7 +147,7 @@ const PriceGraph = React.memo(function PriceGraph({ currentPrice = 1.7957, showD
       <ResponsiveContainer width="100%" height="100%">
         <LineChart
           data={chartData}
-          margin={{ top: 10, right: 10, left: 10, bottom: 10 }}
+          margin={{ top: 10, right: 10, left: 0, bottom: 10 }}
         >
           <XAxis
             dataKey="date"
@@ -329,7 +329,7 @@ const ValueGraph = React.memo(function ValueGraph({ currency }: ValueGraphProps)
         <ResponsiveContainer width="100%" height="100%">
           <ComposedChart
             data={displayData}
-            margin={{ top: 5, right: 10, left: 10, bottom: 20 }}
+            margin={{ top: 5, right: 10, left: 0, bottom: 20 }}
           >
             <XAxis
               dataKey="date"
