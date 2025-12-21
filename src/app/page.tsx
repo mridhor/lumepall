@@ -99,6 +99,16 @@ const PriceGraph = React.memo(function PriceGraph({ currentPrice = 1.7957, showD
         });
 
         if (isMounted) {
+          // Override the last point with the current dynamic price
+          if (updatedFormattedData.length > 0) {
+            const lastIdx = updatedFormattedData.length - 1;
+            updatedFormattedData[lastIdx] = {
+              ...updatedFormattedData[lastIdx],
+              snobol: currentPrice,
+              totalSnobol: currentPrice,
+              actualSnobol: currentPrice
+            };
+          }
           setChartData(updatedFormattedData);
         }
       } catch (error) {
@@ -150,6 +160,22 @@ const PriceGraph = React.memo(function PriceGraph({ currentPrice = 1.7957, showD
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []); // Only run once on mount, and listen for admin price update events
+
+  // Update chart data when currentPrice prop changes (real-time fluctuation)
+  useEffect(() => {
+    setChartData(prev => {
+      if (!prev || prev.length === 0) return prev;
+      const lastIdx = prev.length - 1;
+      const updated = [...prev];
+      updated[lastIdx] = {
+        ...updated[lastIdx],
+        snobol: currentPrice,
+        totalSnobol: currentPrice,
+        actualSnobol: currentPrice
+      };
+      return updated;
+    });
+  }, [currentPrice]);
 
   return (
     <div className="w-full h-full flex flex-col">
@@ -455,7 +481,7 @@ const ValueGraph = React.memo(function ValueGraph({ currency }: ValueGraphProps)
             <Area
               type="monotone"
               dataKey="total_assets"
-              fill="#D1D2D3"
+              fill="#9CA3AF"
               stroke="none"
               baseValue={0}
               isAnimationActive={!hasAnimated}
@@ -465,7 +491,8 @@ const ValueGraph = React.memo(function ValueGraph({ currency }: ValueGraphProps)
               type="monotone"
               dataKey="total_assets"
               stroke="#000000"
-              strokeWidth={2}
+              strokeOpacity={0}
+              strokeWidth={1}
               dot={false}
               activeDot={{ r: 4.5, fill: "white", stroke: "black", strokeWidth: 3.1 }}
               isAnimationActive={!hasAnimated}
