@@ -99,8 +99,8 @@ const PriceGraph = React.memo(function PriceGraph({ currentPrice = 0, showDivide
         });
 
         if (isMounted) {
-          // Override the last point with the current dynamic price
-          if (updatedFormattedData.length > 0) {
+          // Override the last point with the current dynamic price ONLY if valid
+          if (updatedFormattedData.length > 0 && currentPrice > 0) {
             const lastIdx = updatedFormattedData.length - 1;
             updatedFormattedData[lastIdx] = {
               ...updatedFormattedData[lastIdx],
