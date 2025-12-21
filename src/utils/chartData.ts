@@ -375,7 +375,7 @@ const embeddedCsv = `datetime_utc,value
 2025-10-12 20:59:59,1.7957
 2025-10-19 20:59:59,1.800
 2025-10-26 21:59:59,1.803
-2025-10-28 21:59:59,1.7957`;
+2025-10-28 21:59:59,1.824`;
 
 function parseCsv(csv: string): FinancialData[] {
   try {
