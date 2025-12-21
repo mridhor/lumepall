@@ -141,7 +141,8 @@ const PriceGraph = React.memo(function PriceGraph({ currentPrice = 1.7957, showD
       window.removeEventListener('storage', handleStorageChange);
       window.removeEventListener('priceUpdated', handlePriceUpdate);
     };
-  }, [currentPrice]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // Only run once on mount, and listen for admin price update events
 
   return (
     <div className="w-full h-full">
