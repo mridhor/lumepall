@@ -42,12 +42,7 @@ interface PriceGraphProps {
 
 const PriceGraph = React.memo(function PriceGraph({ currentPrice = 1.7957, showDivider = true }: PriceGraphProps) {
   const [chartData, setChartData] = useState<ChartData[]>(() => {
-    // Filter to show only data from April 2021 onwards
-    const april2021Start = new Date('2021-04-01').getTime();
-    return formatAreaChartData().filter(item => {
-      const itemDate = new Date(item.fullDate).getTime();
-      return !isNaN(itemDate) && itemDate >= april2021Start;
-    });
+    return formatAreaChartData()
   });
 
   // Find the index where 2021 starts (fund begins)
