@@ -153,7 +153,7 @@ const PriceGraph = React.memo(function PriceGraph({ currentPrice = 1.7957, showD
 
   return (
     <div className="w-full h-full flex flex-col">
-      <div className="text-2xl md:text-3xl mb-2" style={{ fontFamily: 'Avenir Light', fontWeight: 300 }}>
+      <div className="text-2xl md:text-3xl mb-2 text-right" style={{ fontFamily: 'Avenir Light', fontWeight: 300, height: '16px' }}>
         €{currentPrice.toFixed(2)}
       </div>
       <div className="flex-1">
