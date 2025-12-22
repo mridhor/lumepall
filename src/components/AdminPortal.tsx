@@ -94,7 +94,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({ currentPrice, onPriceU
 
               {(() => {
                 // Calculate values for visualization
-                const silverValueEUR = (silverTroyOunces * silverPriceUSD) / 1.08;
+                const silverValueEUR = (silverTroyOunces * silverPriceUSD); // Now EUR
                 const totalFundValue = baseFundValue + silverValueEUR;
                 const silverPercentage = totalFundValue > 0 ? (silverValueEUR / totalFundValue) * 100 : 0;
                 const basePercentage = totalFundValue > 0 ? (baseFundValue / totalFundValue) * 100 : 0;
@@ -187,7 +187,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({ currentPrice, onPriceU
 
             <div className="group hidden">
               <label className="block text-gray-600 text-xs uppercase tracking-wider mb-2 group-focus-within:text-black transition-colors font-semibold">
-                Silver Price (USD/Oz)
+                Silver Price (EUR/Oz)
               </label>
               <input
                 type="number"

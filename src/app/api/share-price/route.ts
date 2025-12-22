@@ -29,19 +29,19 @@ export async function GET(request: NextRequest) {
       const manualSilverPriceUSD = paramsData.silver_price_usd;
       const baseSharePrice = paramsData.base_share_price;
 
-      const liveSilverPriceUSD = silverData.silverPrice;
-      const eurToUsd = 1.08; // Fixed rate for consistency with frontend
+      const liveSilverPriceUSD = silverData.silverPrice; // Now actually EUR
+      // const eurToUsd = 1.08; // Removed: Silver price is now in EUR directly
 
       // Calculate Total Shares based on the MANUAL/BASE state
       // TotalShares = TotalFundValue_Base / BaseSharePrice
-      const baseSilverValueEUR = (silverOz * manualSilverPriceUSD) / eurToUsd;
+      const baseSilverValueEUR = (silverOz * manualSilverPriceUSD); // param manualSilverPriceUSD is now EUR
       const totalFundValueBase = baseFundValue + baseSilverValueEUR;
       const totalShares = totalFundValueBase / baseSharePrice;
 
       // Calculate Current Share Price based on LIVE silver price (NO fluctuation)
-      const currentSilverPriceUSD = liveSilverPriceUSD;
+      const currentSilverPriceEUR = liveSilverPriceUSD; // Variable name from API is still 'silverPrice' but value is EUR
 
-      const currentSilverValueEUR = (silverOz * currentSilverPriceUSD) / eurToUsd;
+      const currentSilverValueEUR = (silverOz * currentSilverPriceEUR);
       const totalFundValueCurrent = baseFundValue + currentSilverValueEUR;
 
       const currentSharePrice = totalFundValueCurrent / totalShares;
@@ -50,7 +50,7 @@ export async function GET(request: NextRequest) {
         success: true,
         sharePrice: currentSharePrice,
         basePrice: baseSharePrice,
-        silverPrice: currentSilverPriceUSD,
+        silverPrice: currentSilverPriceEUR,
         fluctuation: 0,
         currency: 'EUR',
         timestamp: Date.now(),

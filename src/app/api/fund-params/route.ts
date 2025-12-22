@@ -21,9 +21,9 @@ async function getSupabaseClient(): Promise<SupabaseClient | null> {
 
 // Fallback fund parameters for development
 const fallbackFundParams = {
-  base_fund_value: 575000, // Base fund value in EUR (non-silver portion) - gives ~720k total
+  base_fund_value: 575000, // Base fund value in EUR
   silver_troy_ounces: 5000, // Silver holdings in Troy ounces
-  silver_price_usd: 31.25, // Manual silver price in USD per Troy ounce
+  silver_price_usd: 28.50, // Manual silver price in EUR (legacy column name)
   base_share_price: 1.824, // Manual base share price in EUR
   last_updated: new Date().toISOString(),
 };

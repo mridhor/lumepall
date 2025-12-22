@@ -4,7 +4,7 @@ import type { SupabaseClient } from '@supabase/supabase-js';
 // --- Configuration ---
 const BASE_UPDATE_INTERVAL_MS = 30 * 1000; // 30 seconds
 const JITTER_RANGE_MS = 5 * 1000;          // ±5 seconds
-const SILVER_API_URL = 'https://api.gold-api.com/price/XAG';
+const SILVER_API_URL = 'https://api.gold-api.com/price/XAG/EUR';
 
 // --- In-Memory Cache (Layer 1) ---
 // Note: In serverless (Vercel), this persists only during "warm" executions.
@@ -55,7 +55,7 @@ export async function GET(request: NextRequest) {
         silverPrice: memoryCache.price,
         source: 'memory_cache',
         timestamp: memoryCache.lastUpdated,
-        currency: 'USD'
+        currency: 'EUR'
       });
     }
 
@@ -65,13 +65,14 @@ export async function GET(request: NextRequest) {
     const supabase = await getSupabaseClient();
 
     // Default fallback values
-    let dbPrice = 31.25;
+    // Note: We are now storing EUR in the 'silver_price_usd' column (legacy name)
+    let dbPrice = 28.50; // Approx default EUR price
     let dbLastUpdated = 0;
 
     if (supabase) {
       const { data } = await supabase.from('lumepall_fund_params').select('silver_price_usd, last_updated').single();
       if (data) {
-        dbPrice = Number(data.silver_price_usd) || 31.25;
+        dbPrice = Number(data.silver_price_usd) || 28.50;
         dbLastUpdated = data.last_updated ? new Date(data.last_updated).getTime() : 0;
       }
     }
@@ -85,7 +86,7 @@ export async function GET(request: NextRequest) {
         silverPrice: dbPrice,
         source: 'database_cache',
         timestamp: dbLastUpdated,
-        currency: 'USD'
+        currency: 'EUR'
       });
     }
 
@@ -105,7 +106,7 @@ export async function GET(request: NextRequest) {
           if (supabase) {
             await supabase.from('lumepall_fund_params').upsert({
               id: 1, // Singleton row
-              silver_price_usd: newPrice,
+              silver_price_usd: newPrice, // Storing EUR value in legacy column
               last_updated: new Date(now).toISOString()
             }, { onConflict: 'id' });
           }
@@ -127,7 +128,7 @@ export async function GET(request: NextRequest) {
       silverPrice: newPrice,
       source: source,
       timestamp: now,
-      currency: 'USD'
+      currency: 'EUR'
     });
 
   } catch (error) {
