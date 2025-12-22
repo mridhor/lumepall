@@ -101,8 +101,8 @@ export async function GET(request: NextRequest) {
         const apiData = await fetchSilverApi(apiKey);
         if (apiData.price) {
           // User request: API always shows USD, so we fetch USD and force convert to EUR
-          // User defined rate: 1 EUR = 1.85 USD
-          const userExchangeRate = 1.85;
+          // Correct rate: 69.41 USD / 59.02 EUR = 1.176
+          const userExchangeRate = 1.176;
           const finalPriceEUR = apiData.price / userExchangeRate;
 
           console.log(`Fetched USD price ($${apiData.price}), converted to EUR (€${finalPriceEUR.toFixed(2)}) using rate ${userExchangeRate}`);

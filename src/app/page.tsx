@@ -19,7 +19,7 @@ import Link from "next/link";
 import snobolLogo from "./lumepall.png";
 
 // Currency exchange rate (approximate EUR to USD)
-const EUR_TO_USD = 1.85;
+const EUR_TO_USD = 1.176;
 
 // Media item interface for CMS
 interface MediaItem {
