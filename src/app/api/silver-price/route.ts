@@ -100,7 +100,20 @@ export async function GET(request: NextRequest) {
       try {
         const apiData = await fetchSilverApi(apiKey);
         if (apiData.price) {
-          newPrice = apiData.price;
+          let finalPriceEUR = apiData.price;
+
+          // CRITICAL: Check if API ignored the /EUR path and returned USD
+          // GoldAPI returns { currency: "USD", ... } or { symbol: "XAGUSD", ... }
+          const currency = apiData.currency || (apiData.symbol && apiData.symbol.includes('USD') ? 'USD' : 'EUR');
+
+          if (currency === 'USD') {
+            // Fallback conversion if API fails to give EUR
+            // approx rate: 1 EUR = 1.85 USD
+            finalPriceEUR = apiData.price / 1.85;
+            console.log('API returned USD, converting to EUR:', finalPriceEUR);
+          }
+
+          newPrice = finalPriceEUR;
 
           // Write back to DB (Upsert)
           if (supabase) {
