@@ -868,7 +868,7 @@ export default function Homepage() {
                 Building a world where AI invests money better than any human can.
               </p>
               <p className="text-lg md:text-xl text-gray-600" style={{ fontFamily: 'Avenir Light', fontWeight: 300 }}>
-                Snobol invests in global crises.
+                Lumepall invests in global crises.
               </p>
             </div>
             <div className="h-[250px] md:h-[300px]">
@@ -895,12 +895,12 @@ export default function Homepage() {
 
               <div className="manifesto-item">
                 <span className="manifesto-prefix">#3</span>
-                <span className="manifesto-text">Since 2013, Snobol Research Lead Kristian Kuutok has built contrarian investment algorithm outperforming traditional investing — first in a partnership, later through an investment fund from 2021. The full track record is shown in the graph.</span>
+                <span className="manifesto-text">Since 2013, Lumepall Research Lead Kristian Kuutok has built contrarian investment algorithm outperforming traditional investing — first in a partnership, later through an investment fund from 2021. The full track record is shown in the graph.</span>
               </div>
 
               <div className="manifesto-item">
                 <span className="manifesto-prefix">#4</span>
-                <span className="manifesto-text">Snobol&apos;s mission is to build an AI Fund Manager that consistently outperforms the markets by investing through crises, not avoiding them.</span>
+                <span className="manifesto-text">Lumepall&apos;s mission is to build an AI Fund Manager that consistently outperforms the markets by investing through crises, not avoiding them.</span>
               </div>
 
               <div className="manifesto-item">
