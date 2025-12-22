@@ -55,7 +55,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({ currentPrice, onPriceU
 
         const data = await response.json();
         if (data.success) {
-          setFundMessage("Fund compositions updated successfully. Reloading...");
+          setFundMessage("Fund compositions updated successfully.");
           // Reload page to fetch fresh data from API/DB
           // This prevents stale/fallback values from being displayed
           setTimeout(() => {
