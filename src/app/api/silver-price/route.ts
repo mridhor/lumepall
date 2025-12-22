@@ -93,25 +93,19 @@ export async function GET(request: NextRequest) {
     // --- Layer 3: Fetch External API (Only if both layers are stale) ---
     // At this point, more than ~30s has passed since the last global update.
 
-    let newPrice = dbPrice; // Fallback to old DB price if fetch fails
+    let newPrice = dbPrice; // Canonical endpoint for GoldAPI.io - Fetching USD intentionally to handle conversion reliable
     let source = 'external_api';
 
     if (apiKey) {
       try {
         const apiData = await fetchSilverApi(apiKey);
         if (apiData.price) {
-          let finalPriceEUR = apiData.price;
+          // User request: API always shows USD, so we fetch USD and force convert to EUR
+          // User defined rate: 1 EUR = 1.85 USD
+          const userExchangeRate = 1.85;
+          const finalPriceEUR = apiData.price / userExchangeRate;
 
-          // CRITICAL: Check if API ignored the /EUR path and returned USD
-          // GoldAPI returns { currency: "USD", ... } or { symbol: "XAGUSD", ... }
-          const currency = apiData.currency || (apiData.symbol && apiData.symbol.includes('USD') ? 'USD' : 'EUR');
-
-          if (currency === 'USD') {
-            // Fallback conversion if API fails to give EUR
-            // approx rate: 1 EUR = 1.85 USD
-            finalPriceEUR = apiData.price / 1.85;
-            console.log('API returned USD, converting to EUR:', finalPriceEUR);
-          }
+          console.log(`Fetched USD price ($${apiData.price}), converted to EUR (€${finalPriceEUR.toFixed(2)}) using rate ${userExchangeRate}`);
 
           newPrice = finalPriceEUR;
 
