@@ -325,7 +325,7 @@ const ValueGraph = React.memo(function ValueGraph({ currency }: ValueGraphProps)
     fetchHistoricalData();
   }, []);
 
-  // Real-time fund value updates based on silver price (updates every minute)
+  // Real-time fund value updates based on silver price (updates every 30 seconds)
   useEffect(() => {
     let updateInterval: NodeJS.Timeout | null = null;
 
@@ -367,8 +367,8 @@ const ValueGraph = React.memo(function ValueGraph({ currency }: ValueGraphProps)
     // Initial update
     updateFundValue();
 
-    // Update every minute
-    updateInterval = setInterval(updateFundValue, 60000);
+    // Update every 30 seconds
+    updateInterval = setInterval(updateFundValue, 30000);
 
     return () => {
       if (updateInterval) {
@@ -634,7 +634,7 @@ export default function Homepage() {
   const [valueCurrency, setValueCurrency] = useState<'EUR' | 'USD'>('EUR');
   const [mediaItems, setMediaItems] = useState<MediaItem[]>([]);
 
-  // Fetch price data with real-time updates (updates every minute)
+  // Fetch price data with real-time updates (updates every 30 seconds)
   useEffect(() => {
     const fetchPriceData = async () => {
       try {
@@ -654,8 +654,8 @@ export default function Homepage() {
     // Initial fetch
     fetchPriceData();
 
-    // Update every minute
-    const interval = setInterval(fetchPriceData, 60000);
+    // Update every 30 seconds
+    const interval = setInterval(fetchPriceData, 30000);
     return () => clearInterval(interval);
   }, []);
 

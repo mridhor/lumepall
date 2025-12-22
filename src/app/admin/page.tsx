@@ -69,8 +69,8 @@ export default function AdminDashboard() {
     fetchSubscribers();
     fetchSharePrice();
 
-    // Update share price every minute
-    const interval = setInterval(fetchSharePrice, 60000);
+    // Update share price every 30 seconds
+    const interval = setInterval(fetchSharePrice, 30000);
     return () => clearInterval(interval);
   }, [fetchSubscribers, fetchSharePrice]);
 
