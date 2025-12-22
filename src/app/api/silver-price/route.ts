@@ -70,7 +70,7 @@ export async function GET(request: NextRequest) {
     // 3. Update needed: Fetch from GoldAPI
     if (apiKey) {
       try {
-        const response = await fetch('https://www.goldapi.io/api/XAG/USD', {
+        const response = await fetch('https://api.gold-api.com/price/XAG', {
           headers: {
             'x-access-token': apiKey,
             'Content-Type': 'application/json'

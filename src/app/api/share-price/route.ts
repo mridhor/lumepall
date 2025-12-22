@@ -5,25 +5,8 @@ import { NextRequest, NextResponse } from 'next/server';
 // Updates every second
 
 // Deterministic fluctuation function for silver price
-function getSilverFluctuation(): number {
-  const now = Date.now();
-  const seed = Math.floor(now / 1000); // Changes every second
-
-  // Create pseudo-random value between 0 and 1
-  const pseudoRand = Math.abs(Math.sin(seed * 9301 + 49297) * 233280) % 1;
-
-  // Fluctuation range for silver: ±0.05 to ±0.30 USD (to cause ~0.001-0.006 EUR share price change)
-  const minFluctuation = 0.05;
-  const maxFluctuation = 0.3;
-
-  // Random fluctuation amount
-  const fluctuationAmount = minFluctuation + (pseudoRand * (maxFluctuation - minFluctuation));
-
-  // Random direction (up or down)
-  const direction = Math.sin(seed * 7919) > 0 ? 1 : -1;
-
-  return fluctuationAmount * direction;
-}
+// Deterministic fluctuation removed as per user request
+// Share price now strictly follows the live silver price minus base/manual settings
 
 export async function GET(request: NextRequest) {
   try {
@@ -56,10 +39,8 @@ export async function GET(request: NextRequest) {
       const totalFundValueBase = baseFundValue + baseSilverValueEUR;
       const totalShares = totalFundValueBase / baseSharePrice;
 
-      // Calculate Current Share Price based on LIVE silver price + Fluctuation
-      // Apply fluctuation to the silver price
-      const silverFluctuation = getSilverFluctuation();
-      const currentSilverPriceUSD = liveSilverPriceUSD + silverFluctuation;
+      // Calculate Current Share Price based on LIVE silver price (NO fluctuation)
+      const currentSilverPriceUSD = liveSilverPriceUSD;
 
       const currentSilverValueEUR = (silverOz * currentSilverPriceUSD) / eurToUsd;
       const totalFundValueCurrent = baseFundValue + currentSilverValueEUR;
@@ -71,7 +52,7 @@ export async function GET(request: NextRequest) {
         sharePrice: currentSharePrice,
         basePrice: baseSharePrice,
         silverPrice: currentSilverPriceUSD,
-        fluctuation: silverFluctuation,
+        fluctuation: 0,
         currency: 'EUR',
         timestamp: Date.now(),
         source: 'calculated_from_silver',
