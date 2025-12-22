@@ -1,7 +1,7 @@
 import { createClient, SupabaseClient } from '@supabase/supabase-js'
 
-const supabaseUrl = process.env.SNOBOL_SUPABASE_URL
-const supabaseKey = process.env.SNOBOL_NEXT_PUBLIC_SUPABASE_ANON_KEY
+const supabaseUrl = process.env.SNOBOL_SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL;
+const supabaseKey = process.env.SNOBOL_NEXT_PUBLIC_SUPABASE_ANON_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
 // Create client only if env vars are present
 let supabaseClient: SupabaseClient | null = null;

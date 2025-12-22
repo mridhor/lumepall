@@ -59,7 +59,7 @@ export async function GET(request: NextRequest) {
       success: true,
       base_fund_value: Number(data.base_fund_value),
       silver_troy_ounces: Number(data.silver_troy_ounces),
-      silver_price_usd: Number(data.silver_price_usd || 31.25),
+      silver_price_usd: Number(data.silver_price_usd || 53.07),
       base_share_price: Number(data.base_share_price || 1.824),
       last_updated: data.updated_at || data.created_at,
     });
