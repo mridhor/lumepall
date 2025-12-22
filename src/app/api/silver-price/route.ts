@@ -1,34 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 
-// Scheduled update times in UTC (corresponding to 9 AM, 1 PM, 5 PM UTC-3)
-// UTC-3 is UTC - 3 hours.
-// 09:00 UTC-3 = 12:00 UTC
-// 13:00 UTC-3 = 16:00 UTC
-// 17:00 UTC-3 = 20:00 UTC
-const UPDATE_SLOTS_UTC = [12, 16, 20];
-
-// Helper to get the latest checkpoint timestamp that has passed
-function getLatestCheckpoint(now: number): number {
-  const date = new Date(now);
-  const currentHour = date.getUTCHours();
-
-  // Find the latest slot that has passed today
-  // Sort slots descending
-  const passedSlots = UPDATE_SLOTS_UTC.filter(slot => slot <= currentHour).sort((a, b) => b - a);
-
-  if (passedSlots.length > 0) {
-    // Latest slot today
-    const checkpoint = new Date(now);
-    checkpoint.setUTCHours(passedSlots[0], 0, 0, 0);
-    return checkpoint.getTime();
-  } else {
-    // No slots passed today yet, so the latest was the last slot of yesterday (20:00 UTC)
-    const checkpoint = new Date(now);
-    checkpoint.setDate(checkpoint.getDate() - 1);
-    checkpoint.setUTCHours(UPDATE_SLOTS_UTC[UPDATE_SLOTS_UTC.length - 1], 0, 0, 0);
-    return checkpoint.getTime();
-  }
-}
+const MIN_UPDATE_INTERVAL_MS = 6 * 60 * 1000; // 6 minutes (allows ~10 updates/hour)
 
 export async function GET(request: NextRequest) {
   try {
@@ -42,20 +14,20 @@ export async function GET(request: NextRequest) {
 
     let currentStoredPrice = 31.25;
     let lastUpdatedTs = 0;
-    let currentParams = {};
 
     if (paramsData.success) {
       currentStoredPrice = paramsData.silver_price_usd || 31.25;
       lastUpdatedTs = paramsData.last_updated ? new Date(paramsData.last_updated).getTime() : 0;
-      currentParams = paramsData;
     }
 
     // 2. Check if we need to update
-    const latestCheckpoint = getLatestCheckpoint(now);
-    const needsUpdate = lastUpdatedTs < latestCheckpoint;
+    // Update if more than 6 minutes have passed since last update
+    const timeSinceLastUpdate = now - lastUpdatedTs;
+    const needsUpdate = timeSinceLastUpdate >= MIN_UPDATE_INTERVAL_MS;
 
     // If no update needed, return stored price
     if (!needsUpdate) {
+      const minutesRemaining = Math.ceil((MIN_UPDATE_INTERVAL_MS - timeSinceLastUpdate) / 60000);
       return NextResponse.json({
         success: true,
         silverPrice: currentStoredPrice,
@@ -63,7 +35,7 @@ export async function GET(request: NextRequest) {
         unit: 'troy_ounce',
         timestamp: lastUpdatedTs,
         source: 'stored_db',
-        nextUpdate: 'Next scheduled slot'
+        nextUpdate: `In ~${minutesRemaining} minutes`
       });
     }
 

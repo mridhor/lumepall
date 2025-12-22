@@ -161,7 +161,7 @@ const PriceGraph = React.memo(function PriceGraph({ currentPrice = 0, showDivide
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []); // Only run once on mount, and listen for admin price update events
 
-  // Update chart data when currentPrice prop changes (real-time fluctuation)
+  // Update chart data when currentPrice prop changes
   useEffect(() => {
     if (currentPrice <= 0) return; // Don't update chart with 0 price
 
@@ -267,7 +267,7 @@ const PriceGraph = React.memo(function PriceGraph({ currentPrice = 0, showDivide
   );
 });
 
-// Fund Assets Graph Component - Shows total fund assets with real-time silver price fluctuation
+// Fund Assets Graph Component - Shows total fund assets with real-time silver price updates
 interface ValueGraphProps {
   currency: 'EUR' | 'USD';
 }
@@ -325,7 +325,7 @@ const ValueGraph = React.memo(function ValueGraph({ currency }: ValueGraphProps)
     fetchHistoricalData();
   }, []);
 
-  // Real-time fund value updates based on silver price (updates every 2 seconds)
+  // Real-time fund value updates based on silver price (updates every minute)
   useEffect(() => {
     let updateInterval: NodeJS.Timeout | null = null;
 
@@ -367,8 +367,8 @@ const ValueGraph = React.memo(function ValueGraph({ currency }: ValueGraphProps)
     // Initial update
     updateFundValue();
 
-    // Update every 2 seconds
-    updateInterval = setInterval(updateFundValue, 2000);
+    // Update every minute
+    updateInterval = setInterval(updateFundValue, 60000);
 
     return () => {
       if (updateInterval) {
@@ -634,7 +634,7 @@ export default function Homepage() {
   const [valueCurrency, setValueCurrency] = useState<'EUR' | 'USD'>('EUR');
   const [mediaItems, setMediaItems] = useState<MediaItem[]>([]);
 
-  // Fetch price data with real-time fluctuation (updates every 1 second)
+  // Fetch price data with real-time updates (updates every minute)
   useEffect(() => {
     const fetchPriceData = async () => {
       try {
@@ -654,8 +654,8 @@ export default function Homepage() {
     // Initial fetch
     fetchPriceData();
 
-    // Update every 5 seconds to show fluctuation
-    const interval = setInterval(fetchPriceData, 5000);
+    // Update every minute
+    const interval = setInterval(fetchPriceData, 60000);
     return () => clearInterval(interval);
   }, []);
 

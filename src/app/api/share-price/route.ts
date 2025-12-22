@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 
-// Share price API - Returns base share price with realistic fluctuations
-// Fluctuates ±0.01 to ±0.05 EUR around the manually set base price
+// Share price API - Returns base share price derived from live silver price
 // Updates every second
 
 // Deterministic fluctuation function for silver price
