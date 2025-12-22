@@ -1,113 +1,144 @@
 import { NextRequest, NextResponse } from 'next/server';
+import type { SupabaseClient } from '@supabase/supabase-js';
 
-const MIN_UPDATE_INTERVAL_MS = 6 * 60 * 1000; // 6 minutes (allows ~10 updates/hour)
+// --- Configuration ---
+const BASE_UPDATE_INTERVAL_MS = 30 * 1000; // 30 seconds
+const JITTER_RANGE_MS = 5 * 1000;          // ±5 seconds
+const SILVER_API_URL = 'https://api.gold-api.com/price/XAG';
+
+// --- In-Memory Cache (Layer 1) ---
+// Note: In serverless (Vercel), this persists only during "warm" executions.
+// We rely on Supabase (Layer 2) for cold starts / cross-instance sharing.
+let memoryCache = {
+  price: 0,
+  lastUpdated: 0
+};
+
+// --- Helper Functions ---
+
+// 1. Get Supabase Client (Lazy Load)
+let cachedSupabase: SupabaseClient | null | undefined;
+async function getSupabaseClient(): Promise<SupabaseClient | null> {
+  if (cachedSupabase !== undefined) return cachedSupabase;
+  try {
+    const { supabase } = await import('@/lib/supabase');
+    cachedSupabase = supabase;
+  } catch {
+    cachedSupabase = null;
+  }
+  return cachedSupabase ?? null;
+}
+
+// 2. Fetch external API
+async function fetchSilverApi(apiKey: string) {
+  const res = await fetch(SILVER_API_URL, {
+    headers: { 'x-access-token': apiKey },
+    next: { revalidate: 0 } // No fetch-level caching, we manage it manually
+  });
+  if (!res.ok) throw new Error(`SilverAPI Error: ${res.status}`);
+  return res.json();
+}
 
 export async function GET(request: NextRequest) {
   try {
-    const apiKey = process.env.SILVER_API_KEY;
     const now = Date.now();
+    const apiKey = process.env.SILVER_API_KEY;
 
-    // 1. Fetch current stored parameters (price + last_updated)
-    const paramsUrl = new URL('/api/fund-params', request.url).toString();
-    const paramsRes = await fetch(paramsUrl, { cache: 'no-store' });
-    const paramsData = await paramsRes.json();
+    // --- Layer 1: Check In-Memory Cache ---
+    // Apply jitter dynamically to avoid thundering herd across instances if they sync up
+    const randomJitter = (Math.random() * 2 - 1) * JITTER_RANGE_MS;
+    const effectiveInterval = BASE_UPDATE_INTERVAL_MS + randomJitter;
 
-    let currentStoredPrice = 31.25;
-    let lastUpdatedTs = 0;
-
-    if (paramsData.success) {
-      currentStoredPrice = paramsData.silver_price_usd || 31.25;
-      lastUpdatedTs = paramsData.last_updated ? new Date(paramsData.last_updated).getTime() : 0;
-    }
-
-    // 2. Check if we need to update
-    // Update if more than 6 minutes have passed since last update
-    const timeSinceLastUpdate = now - lastUpdatedTs;
-    const needsUpdate = timeSinceLastUpdate >= MIN_UPDATE_INTERVAL_MS;
-
-    // If no update needed, return stored price
-    if (!needsUpdate) {
-      const minutesRemaining = Math.ceil((MIN_UPDATE_INTERVAL_MS - timeSinceLastUpdate) / 60000);
+    if (memoryCache.price > 0 && (now - memoryCache.lastUpdated) < effectiveInterval) {
       return NextResponse.json({
         success: true,
-        silverPrice: currentStoredPrice,
-        currency: 'USD',
-        unit: 'troy_ounce',
-        timestamp: lastUpdatedTs,
-        source: 'stored_db',
-        nextUpdate: `In ~${minutesRemaining} minutes`
+        silverPrice: memoryCache.price,
+        source: 'memory_cache',
+        timestamp: memoryCache.lastUpdated,
+        currency: 'USD'
       });
     }
 
-    // 3. Update needed: Fetch from GoldAPI
-    if (apiKey) {
-      try {
-        const response = await fetch('https://api.gold-api.com/price/XAG', {
-          headers: {
-            'x-access-token': apiKey,
-            'Content-Type': 'application/json'
-          },
-          next: { revalidate: 0 } // No caching for the external call itself
-        });
+    // --- Layer 2: Check Database Cache (Supabase) ---
+    // If memory is stale or empty (cold start), check the DB.
+    // This creates coordination between multiple serverless instances.
+    const supabase = await getSupabaseClient();
 
-        if (response.ok) {
-          const data = await response.json();
-          if (data.price) {
-            const newPrice = data.price;
+    // Default fallback values
+    let dbPrice = 31.25;
+    let dbLastUpdated = 0;
 
-            // 4. Update the database with new price
-            // We need to send all params back to POST
-            if (paramsData.success) {
-              await fetch(paramsUrl, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                  base_fund_value: paramsData.base_fund_value,
-                  silver_troy_ounces: paramsData.silver_troy_ounces,
-                  base_share_price: paramsData.base_share_price,
-                  silver_price_usd: newPrice
-                  // updated_at will be set by the POST handler
-                })
-              });
-            }
-
-            return NextResponse.json({
-              success: true,
-              silverPrice: newPrice,
-              currency: 'USD',
-              unit: 'troy_ounce',
-              timestamp: now,
-              source: 'goldapi_live_update',
-            });
-          }
-        } else {
-          console.error('GoldAPI error:', response.status);
-        }
-      } catch (apiError) {
-        console.error('Failed to fetch from GoldAPI:', apiError);
+    if (supabase) {
+      const { data } = await supabase.from('lumepall_fund_params').select('silver_price_usd, last_updated').single();
+      if (data) {
+        dbPrice = Number(data.silver_price_usd) || 31.25;
+        dbLastUpdated = data.last_updated ? new Date(data.last_updated).getTime() : 0;
       }
     }
 
-    // Fallback if API failed or no key: Return stored price
+    // Check if DB data is fresh enough (using the same interval logic)
+    if ((now - dbLastUpdated) < effectiveInterval) {
+      // DB is fresh -> Update memory cache and return
+      memoryCache = { price: dbPrice, lastUpdated: dbLastUpdated };
+      return NextResponse.json({
+        success: true,
+        silverPrice: dbPrice,
+        source: 'database_cache',
+        timestamp: dbLastUpdated,
+        currency: 'USD'
+      });
+    }
+
+    // --- Layer 3: Fetch External API (Only if both layers are stale) ---
+    // At this point, more than ~30s has passed since the last global update.
+
+    let newPrice = dbPrice; // Fallback to old DB price if fetch fails
+    let source = 'external_api';
+
+    if (apiKey) {
+      try {
+        const apiData = await fetchSilverApi(apiKey);
+        if (apiData.price) {
+          newPrice = apiData.price;
+
+          // Write back to DB (Upsert)
+          if (supabase) {
+            await supabase.from('lumepall_fund_params').upsert({
+              id: 1, // Singleton row
+              silver_price_usd: newPrice,
+              last_updated: new Date(now).toISOString()
+            }, { onConflict: 'id' });
+          }
+        }
+      } catch (externalError) {
+        console.error('External API failed, serving stale data:', externalError);
+        source = 'stale_backup';
+        // We do NOT update the timestamp, so we retry next request (or we could cache failure for a bit)
+      }
+    } else {
+      source = 'manual_fallback_no_key';
+    }
+
+    // Update Memory Cache
+    memoryCache = { price: newPrice, lastUpdated: now };
+
     return NextResponse.json({
       success: true,
-      silverPrice: currentStoredPrice,
-      currency: 'USD',
-      unit: 'troy_ounce',
-      timestamp: lastUpdatedTs,
-      source: 'fallback_stored',
-      message: 'Update failed or API key missing'
+      silverPrice: newPrice,
+      source: source,
+      timestamp: now,
+      currency: 'USD'
     });
 
   } catch (error) {
-    console.error('Error in silver-price API:', error);
+    console.error('Critical Error in silver-price API:', error);
+    // Ultimate failsafe: return whatever is in memory or hardcoded default
     return NextResponse.json({
       success: true,
-      silverPrice: 31.25,
-      currency: 'USD',
-      unit: 'troy_ounce',
+      silverPrice: memoryCache.price || 31.25,
+      source: 'critical_error_fallback',
       timestamp: Date.now(),
-      source: 'error_fallback',
+      currency: 'USD'
     });
   }
 }
