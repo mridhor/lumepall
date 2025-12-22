@@ -120,7 +120,7 @@ export default function AdminDashboard() {
         <div className="flex justify-between items-end mb-12">
           <div>
             <h1 className="text-3xl font-medium tracking-tight mb-2">Admin</h1>
-            <p className="text-gray-600 text-lg">Manage fund parameters and subscribers</p>
+            <p className="text-gray-600 text-lg">Manage fund compositions and subscribers</p>
           </div>
           <button
             onClick={handleLogout}
@@ -130,7 +130,7 @@ export default function AdminDashboard() {
           </button>
         </div>
 
-        {/* Fund Parameters Management */}
+        {/* Fund Compositions Management */}
         <div className="mb-16">
           <AdminPortal
             currentPrice={currentSharePrice}

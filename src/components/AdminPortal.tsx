@@ -14,7 +14,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({ currentPrice, onPriceU
   const [message, setMessage] = useState("");
   const [fundMessage, setFundMessage] = useState("");
 
-  // Fetch current fund parameters on mount
+  // Fetch current fund compositions on mount
   useEffect(() => {
     const fetchFundParams = async () => {
       try {
@@ -28,7 +28,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({ currentPrice, onPriceU
           setPriceInput(data.base_share_price || 1.824);
         }
       } catch (error) {
-        console.error('Failed to fetch fund parameters:', error);
+        console.error('Failed to fetch fund compositions:', error);
       }
     };
     fetchFundParams();
@@ -55,7 +55,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({ currentPrice, onPriceU
 
         const data = await response.json();
         if (data.success) {
-          setFundMessage("Fund parameters updated successfully");
+          setFundMessage("Fund compositions updated successfully");
           // Also update the legacy price input
           setPriceInput(baseSharePrice);
           onPriceUpdate(baseSharePrice);
@@ -63,11 +63,11 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({ currentPrice, onPriceU
           // Clear message after 3 seconds
           setTimeout(() => setFundMessage(""), 3000);
         } else {
-          setFundMessage("Error updating fund parameters");
+          setFundMessage("Error updating fund compositions");
         }
       } catch (error) {
-        console.error('Error updating fund parameters:', error);
-        setFundMessage("Error updating fund parameters");
+        console.error('Error updating fund compositions:', error);
+        setFundMessage("Error updating fund compositions");
       }
     } else {
       setFundMessage("Please enter valid numbers");
@@ -143,7 +143,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({ currentPrice, onPriceU
 
         {/* Right Column: Controls */}
         <div>
-          <h3 className="text-xl font-medium mb-6">Fund Parameters</h3>
+          <h3 className="text-xl font-medium mb-6">Fund Compositions</h3>
           <div className="space-y-6">
             <div className="group">
               <label className="block text-gray-600 text-xs uppercase tracking-wider mb-2 group-focus-within:text-black transition-colors font-semibold">
@@ -204,7 +204,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({ currentPrice, onPriceU
                 onClick={handleFundParamsUpdate}
                 className="bg-black text-white px-6 py-2.5 rounded-full hover:bg-gray-800 transition-all active:scale-95 text-xs uppercase tracking-wider font-bold"
               >
-                Update Parameters
+                Update Compositions
               </button>
 
               {fundMessage && (
