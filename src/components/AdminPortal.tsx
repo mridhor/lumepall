@@ -55,13 +55,12 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({ currentPrice, onPriceU
 
         const data = await response.json();
         if (data.success) {
-          setFundMessage("Fund compositions updated successfully");
-          // Also update the legacy price input
-          setPriceInput(baseSharePrice);
-          onPriceUpdate(baseSharePrice);
-
-          // Clear message after 3 seconds
-          setTimeout(() => setFundMessage(""), 3000);
+          setFundMessage("Fund compositions updated successfully. Reloading...");
+          // Reload page to fetch fresh data from API/DB
+          // This prevents stale/fallback values from being displayed
+          setTimeout(() => {
+            window.location.reload();
+          }, 500); // Short delay to show success message
         } else {
           setFundMessage("Error updating fund compositions");
         }
