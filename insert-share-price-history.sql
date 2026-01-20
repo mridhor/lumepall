@@ -2,11 +2,41 @@
 -- Run these in your Supabase SQL Editor
 -- This inserts all 249 historical share price records from the Excel file
 
--- First, clear existing data (optional - remove this if you want to keep other data)
--- DELETE FROM lumepall_history;
+-- First, ensure the table exists with correct schema
+CREATE TABLE IF NOT EXISTS lumepall_history (
+  id BIGSERIAL PRIMARY KEY,
+  date TEXT UNIQUE NOT NULL,
+  snobol DECIMAL(10, 4) NOT NULL,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
 
--- Insert share price history data
--- Note: Adjust table/column names based on your actual Supabase schema
+-- Add UNIQUE constraint if it doesn't exist (for existing tables)
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_constraint WHERE conname = 'lumepall_history_date_key'
+  ) THEN
+    ALTER TABLE lumepall_history ADD CONSTRAINT lumepall_history_date_key UNIQUE (date);
+  END IF;
+END $$;
+
+-- Create index for faster date lookups
+CREATE INDEX IF NOT EXISTS idx_lumepall_history_date ON lumepall_history(date);
+
+-- Enable RLS
+ALTER TABLE lumepall_history ENABLE ROW LEVEL SECURITY;
+
+-- Create policy for public read access
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_policies WHERE tablename = 'lumepall_history' AND policyname = 'Allow public read'
+  ) THEN
+    CREATE POLICY "Allow public read" ON lumepall_history FOR SELECT USING (true);
+  END IF;
+END $$;
+
+-- Insert share price history data from Excel file
 
 INSERT INTO lumepall_history (date, snobol) VALUES ('Aug 8, 2013', 0.075) ON CONFLICT (date) DO UPDATE SET snobol = EXCLUDED.snobol;
 INSERT INTO lumepall_history (date, snobol) VALUES ('Dec 31, 2014', 0.1104) ON CONFLICT (date) DO UPDATE SET snobol = EXCLUDED.snobol;
