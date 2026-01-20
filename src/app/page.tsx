@@ -42,47 +42,79 @@ interface PriceGraphProps {
 }
 
 const PriceGraph = React.memo(function PriceGraph({ currentPrice = 0, showDivider = true }: PriceGraphProps) {
-  // Helper function to add interpolated points for pre-2021 data
-  const expandPreFundData = (data: ChartData[]): ChartData[] => {
-    const expandedData: ChartData[] = [];
-    for (let i = 0; i < data.length; i++) {
-      const current = data[i];
-      expandedData.push(current);
+  // Helper function to create evenly balanced annual data with same points per year
+  const balanceAnnualData = (data: ChartData[]): ChartData[] => {
+    if (data.length === 0) return data;
 
-      // Check if we should add an interpolated point
-      if (i < data.length - 1) {
-        const next = data[i + 1];
+    // Group data by year
+    const yearGroups = new Map<number, ChartData[]>();
+    data.forEach(item => {
+      const year = parseInt(item.fullDate.match(/\d{4}/)?.[0] || '0');
+      if (year > 0) {
+        if (!yearGroups.has(year)) {
+          yearGroups.set(year, []);
+        }
+        yearGroups.get(year)!.push(item);
+      }
+    });
 
-        // Parse years from dates
-        const currentYear = current.fullDate.match(/\d{4}/)?.[0];
-        const nextYear = next.fullDate.match(/\d{4}/)?.[0];
+    // Calculate target points per year (use median to balance sparse and dense years)
+    const pointsPerYear = Array.from(yearGroups.values()).map(g => g.length);
+    const targetPointsPerYear = Math.floor(pointsPerYear.reduce((a, b) => a + b, 0) / pointsPerYear.length);
 
-        // Only interpolate between yearly pre-2021 data points
-        if (currentYear && nextYear &&
-            parseInt(currentYear) < 2021 &&
-            parseInt(nextYear) < 2021 &&
-            parseInt(nextYear) > parseInt(currentYear)) {
+    // For each year, normalize to target number of points
+    const balancedData: ChartData[] = [];
+    const sortedYears = Array.from(yearGroups.keys()).sort();
 
-          // Add a midpoint with interpolated values
-          const midDate = `Jun 30, ${currentYear}`;
+    sortedYears.forEach(year => {
+      const yearData = yearGroups.get(year)!.sort((a, b) => {
+        return new Date(a.fullDate).getTime() - new Date(b.fullDate).getTime();
+      });
+
+      const currentPoints = yearData.length;
+
+      if (currentPoints >= targetPointsPerYear) {
+        // Sample down to target (keep evenly distributed points)
+        const step = currentPoints / targetPointsPerYear;
+        for (let i = 0; i < targetPointsPerYear; i++) {
+          const index = Math.floor(i * step);
+          balancedData.push(yearData[index]);
+        }
+      } else {
+        // Interpolate up to target
+        balancedData.push(...yearData);
+
+        const pointsToAdd = targetPointsPerYear - currentPoints;
+        for (let i = 0; i < pointsToAdd; i++) {
+          const position = (i + 1) / (pointsToAdd + 1);
+          const baseIndex = Math.floor(position * (currentPoints - 1));
+          const nextIndex = Math.min(baseIndex + 1, currentPoints - 1);
+
+          const base = yearData[baseIndex];
+          const next = yearData[nextIndex];
+          const t = position * (currentPoints - 1) - baseIndex;
+
           const interpolated: ChartData = {
-            date: midDate,
-            fullDate: midDate,
-            sp500: (current.sp500 + next.sp500) / 2,
-            snobol: (current.snobol + next.snobol) / 2,
-            totalSnobol: ((current.totalSnobol || 0) + (next.totalSnobol || 0)) / 2,
-            actualSp500: ((current.actualSp500 || 0) + (next.actualSp500 || 0)) / 2,
-            actualSnobol: ((current.actualSnobol || 0) + (next.actualSnobol || 0)) / 2
+            date: base.date,
+            fullDate: base.fullDate,
+            sp500: base.sp500 * (1 - t) + next.sp500 * t,
+            snobol: base.snobol * (1 - t) + next.snobol * t,
+            totalSnobol: (base.totalSnobol || 0) * (1 - t) + (next.totalSnobol || 0) * t,
+            actualSp500: (base.actualSp500 || 0) * (1 - t) + (next.actualSp500 || 0) * t,
+            actualSnobol: (base.actualSnobol || 0) * (1 - t) + (next.actualSnobol || 0) * t
           };
-          expandedData.push(interpolated);
+          balancedData.push(interpolated);
         }
       }
-    }
-    return expandedData;
+    });
+
+    return balancedData.sort((a, b) => {
+      return new Date(a.fullDate).getTime() - new Date(b.fullDate).getTime();
+    });
   };
 
   const [chartData, setChartData] = useState<ChartData[]>(() => {
-    return expandPreFundData(formatAreaChartData())
+    return balanceAnnualData(formatAreaChartData())
   });
   const [hasAnimated, setHasAnimated] = useState(false);
 
@@ -141,8 +173,8 @@ const PriceGraph = React.memo(function PriceGraph({ currentPrice = 0, showDivide
         });
 
         if (isMounted) {
-          // Apply the same pre-2021 expansion to fetched data
-          setChartData(expandPreFundData(updatedFormattedData));
+          // Apply annual balancing to fetched data
+          setChartData(balanceAnnualData(updatedFormattedData));
         }
       } catch (error) {
         console.error('Failed to fetch prices:', error);
