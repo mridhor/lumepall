@@ -297,19 +297,33 @@ function parseCsv(csv: string): FinancialData[] {
   }
 }
 
+// Cache version - increment this to force all users to refresh their data
+const CACHE_VERSION = '2.0'; // Updated: Added 2013-2020 historical data
+
 export const financialData: FinancialData[] = (() => {
   // Prefer persisted client-side data
   if (typeof window !== 'undefined') {
+    const storedVersion = localStorage.getItem("financialDataVersion");
     const stored = localStorage.getItem("financialData");
-    if (stored && stored.length > 0) {
+
+    // Check cache version - if different, clear cache
+    if (storedVersion !== CACHE_VERSION) {
+      console.log(`Cache version mismatch (${storedVersion} !== ${CACHE_VERSION}). Clearing cache.`);
+      localStorage.removeItem("financialData");
+      localStorage.setItem("financialDataVersion", CACHE_VERSION);
+    } else if (stored && stored.length > 0) {
       try {
         const parsed = JSON.parse(stored);
-        // Check if cached data includes 2015 data (cache invalidation)
-        const has2015Data = parsed.some((d: FinancialData) => d.date?.includes('2015'));
-        if (has2015Data && parsed.length > 100) {
+        // Check if cached data includes 2013 data (cache invalidation)
+        // Must have data from Aug 2013 (investment partnership start) and be 200+ records
+        const has2013Data = parsed.some((d: FinancialData) =>
+          d.date?.includes('2013') || d.date?.includes('Aug 8, 2013')
+        );
+        if (has2013Data && parsed.length >= 200) {
           return parsed;
         }
-        // Clear outdated cache
+        // Clear outdated cache - missing historical data
+        console.log('Clearing outdated cache - missing 2013-2020 historical data');
         localStorage.removeItem("financialData");
       } catch {
         localStorage.removeItem("financialData");
@@ -341,6 +355,7 @@ export const addTodayData = (latestPrice: number, sp500: number) => {
 
   if (typeof window !== 'undefined') {
     localStorage.setItem("financialData", JSON.stringify(updatedData));
+    localStorage.setItem("financialDataVersion", CACHE_VERSION);
   }
   return updatedData;
 };
@@ -365,6 +380,7 @@ export const checkAndRecordYearlyData = (latestPrice: number, sp500: number) => 
     const updatedData = [...financialData, yearEndEntry];
     if (typeof window !== 'undefined') {
       localStorage.setItem("financialData", JSON.stringify(updatedData));
+      localStorage.setItem("financialDataVersion", CACHE_VERSION);
     }
     return updatedData;
   }
