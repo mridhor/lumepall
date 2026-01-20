@@ -1,8 +1,39 @@
 -- SQL queries to insert fund assets data into Supabase
 -- Run these in your Supabase SQL Editor
 
--- First, clear existing data (optional - remove this if you want to keep other data)
--- DELETE FROM lumepall_fund_assets;
+-- First, ensure the table exists with correct schema
+CREATE TABLE IF NOT EXISTS lumepall_fund_assets (
+  id BIGSERIAL PRIMARY KEY,
+  date TEXT UNIQUE NOT NULL,
+  total_assets DECIMAL(12, 2) NOT NULL,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Add UNIQUE constraint if it doesn't exist (for existing tables)
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_constraint WHERE conname = 'lumepall_fund_assets_date_key'
+  ) THEN
+    ALTER TABLE lumepall_fund_assets ADD CONSTRAINT lumepall_fund_assets_date_key UNIQUE (date);
+  END IF;
+END $$;
+
+-- Create index for faster date lookups
+CREATE INDEX IF NOT EXISTS idx_lumepall_fund_assets_date ON lumepall_fund_assets(date);
+
+-- Enable RLS
+ALTER TABLE lumepall_fund_assets ENABLE ROW LEVEL SECURITY;
+
+-- Create policy for public read access
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_policies WHERE tablename = 'lumepall_fund_assets' AND policyname = 'Allow public read'
+  ) THEN
+    CREATE POLICY "Allow public read" ON lumepall_fund_assets FOR SELECT USING (true);
+  END IF;
+END $$;
 
 -- Insert fund assets data from Excel file
 -- Investment Partnership Period (2013-2020)
