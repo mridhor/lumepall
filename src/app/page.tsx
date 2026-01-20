@@ -70,22 +70,25 @@ const PriceGraph = React.memo(function PriceGraph({ currentPrice = 0, showDivide
 
     const fetchPrices = async () => {
       try {
-        const [sp500Response, priceResponse] = await Promise.all([
+        const [sp500Response, sharePriceResponse] = await Promise.all([
           fetch('/api/sp500-price'),
-          fetch('/api/price')
+          fetch('/api/share-price')
         ]);
 
-        const [sp500Data, priceData] = await Promise.all([
+        const [sp500Data, sharePriceData] = await Promise.all([
           sp500Response.json(),
-          priceResponse.json()
+          sharePriceResponse.json()
         ]);
 
         const sp500Baseline = 1697.48;
+        // Use the live share price from /api/share-price (calculated from live silver prices)
+        const liveSharePrice = sharePriceData.sharePrice;
 
         const updatedFormattedData = sp500Data.updatedData.map((item: { date: string; sp500: number; snobol: number }, index: number) => {
           const isLatestPoint = index === sp500Data.updatedData.length - 1;
           const actualSp500 = isLatestPoint ? sp500Data.actualPrice : (item.sp500 * sp500Baseline);
-          const actualSnobol = item.snobol;
+          // Use live share price for the latest point, historical data for others
+          const actualSnobol = isLatestPoint ? liveSharePrice : item.snobol;
 
           return {
             date: item.date,
@@ -99,21 +102,11 @@ const PriceGraph = React.memo(function PriceGraph({ currentPrice = 0, showDivide
         });
 
         if (isMounted) {
-          // Override the last point with the current dynamic price ONLY if valid
-          if (updatedFormattedData.length > 0 && currentPrice > 0) {
-            const lastIdx = updatedFormattedData.length - 1;
-            updatedFormattedData[lastIdx] = {
-              ...updatedFormattedData[lastIdx],
-              snobol: currentPrice,
-              totalSnobol: currentPrice,
-              actualSnobol: currentPrice
-            };
-          }
           setChartData(updatedFormattedData);
         }
       } catch (error) {
         console.error('Failed to fetch prices:', error);
-        if (isMounted) {
+        if (isMounted && currentPrice > 0) {
           setChartData(prev => {
             if (!prev || prev.length === 0) return prev;
             const lastIdx = prev.length - 1;
