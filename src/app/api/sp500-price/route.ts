@@ -66,8 +66,8 @@ export async function GET(request: NextRequest) {
           type DBRow = { date: string; snobol: number }
           const parsed = (data as unknown as DBRow[])
             .map((r) => ({ date: r.date, snobol: Number(r.snobol), sp500: 1 }))
-            // Filter out zero/invalid values - only keep data with actual values
-            .filter(d => d.date && isFinite(d.snobol) && d.snobol > 0.5)
+            // Filter out zero/invalid values - keep all positive values including early years
+            .filter(d => d.date && isFinite(d.snobol) && d.snobol > 0)
 
           // Use Supabase data if it has valid entries
           if (parsed.length > 50) {
@@ -145,11 +145,11 @@ export async function GET(request: NextRequest) {
       // PRIORITY: CSV first (has correct 2015-2025 values), then Supabase as fallback
       let baseData: FinancialData[] = [];
       if (csvFinancialData && csvFinancialData.length > 0) {
-        // Use CSV data - it has complete 2015-2025 values without zeros
+        // Use CSV data - it has complete 2013-2025 values without zeros
         const map = new Map<string, FinancialData>();
         for (const row of csvFinancialData) {
-          // Only keep data with non-zero values
-          if (row.snobol > 0.5) {
+          // Only keep data with non-zero values (accept all positive values including early years)
+          if (row.snobol > 0) {
             map.set(row.date, row);
           }
         }
