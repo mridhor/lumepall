@@ -42,8 +42,47 @@ interface PriceGraphProps {
 }
 
 const PriceGraph = React.memo(function PriceGraph({ currentPrice = 0, showDivider = true }: PriceGraphProps) {
+  // Helper function to add interpolated points for pre-2021 data
+  const expandPreFundData = (data: ChartData[]): ChartData[] => {
+    const expandedData: ChartData[] = [];
+    for (let i = 0; i < data.length; i++) {
+      const current = data[i];
+      expandedData.push(current);
+
+      // Check if we should add an interpolated point
+      if (i < data.length - 1) {
+        const next = data[i + 1];
+
+        // Parse years from dates
+        const currentYear = current.fullDate.match(/\d{4}/)?.[0];
+        const nextYear = next.fullDate.match(/\d{4}/)?.[0];
+
+        // Only interpolate between yearly pre-2021 data points
+        if (currentYear && nextYear &&
+            parseInt(currentYear) < 2021 &&
+            parseInt(nextYear) < 2021 &&
+            parseInt(nextYear) > parseInt(currentYear)) {
+
+          // Add a midpoint with interpolated values
+          const midDate = `Jun 30, ${currentYear}`;
+          const interpolated: ChartData = {
+            date: midDate,
+            fullDate: midDate,
+            sp500: (current.sp500 + next.sp500) / 2,
+            snobol: (current.snobol + next.snobol) / 2,
+            totalSnobol: ((current.totalSnobol || 0) + (next.totalSnobol || 0)) / 2,
+            actualSp500: ((current.actualSp500 || 0) + (next.actualSp500 || 0)) / 2,
+            actualSnobol: ((current.actualSnobol || 0) + (next.actualSnobol || 0)) / 2
+          };
+          expandedData.push(interpolated);
+        }
+      }
+    }
+    return expandedData;
+  };
+
   const [chartData, setChartData] = useState<ChartData[]>(() => {
-    return formatAreaChartData()
+    return expandPreFundData(formatAreaChartData())
   });
   const [hasAnimated, setHasAnimated] = useState(false);
 
@@ -102,7 +141,8 @@ const PriceGraph = React.memo(function PriceGraph({ currentPrice = 0, showDivide
         });
 
         if (isMounted) {
-          setChartData(updatedFormattedData);
+          // Apply the same pre-2021 expansion to fetched data
+          setChartData(expandPreFundData(updatedFormattedData));
         }
       } catch (error) {
         console.error('Failed to fetch prices:', error);
@@ -226,7 +266,7 @@ const PriceGraph = React.memo(function PriceGraph({ currentPrice = 0, showDivide
                       <div className="space-y-1">
                         <div className="flex items-center gap-2">
                           <span className="text-gray-700">Lumepall:</span>
-                          <span className="font-semibold">{data.actualSnobol?.toFixed(2)} EUR</span>
+                          <span className="font-semibold">{data.actualSnobol?.toFixed(3)} EUR</span>
                         </div>
                       </div>
                     </div>
