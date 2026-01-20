@@ -42,7 +42,7 @@ interface PriceGraphProps {
 }
 
 const PriceGraph = React.memo(function PriceGraph({ currentPrice = 0, showDivider = true }: PriceGraphProps) {
-  // Helper function to create evenly balanced annual data with same points per year
+  // Helper function to balance annual data: pre-2021 gets half the width of post-2021
   const balanceAnnualData = (data: ChartData[]): ChartData[] => {
     if (data.length === 0) return data;
 
@@ -58,15 +58,21 @@ const PriceGraph = React.memo(function PriceGraph({ currentPrice = 0, showDivide
       }
     });
 
-    // Calculate target points per year (use median to balance sparse and dense years)
-    const pointsPerYear = Array.from(yearGroups.values()).map(g => g.length);
-    const targetPointsPerYear = Math.floor(pointsPerYear.reduce((a, b) => a + b, 0) / pointsPerYear.length);
-
-    // For each year, normalize to target number of points
-    const balancedData: ChartData[] = [];
+    // Calculate base target points per year from post-2021 data
     const sortedYears = Array.from(yearGroups.keys()).sort();
+    const post2021Years = sortedYears.filter(y => y >= 2021);
+    const post2021Points = post2021Years.map(y => yearGroups.get(y)!.length);
+    const baseTargetPoints = post2021Points.length > 0
+      ? Math.floor(post2021Points.reduce((a, b) => a + b, 0) / post2021Points.length)
+      : 52; // Default to ~weekly if no post-2021 data
 
-    sortedYears.forEach(year => {
+    // Pre-2021 years get half the points (half the width)
+    const pre2021TargetPoints = Math.floor(baseTargetPoints / 2);
+
+    // For each year, normalize to appropriate target number of points
+    const balancedData: ChartData[] = [];
+
+    const normalizeYear = (year: number, targetPointsPerYear: number) => {
       const yearData = yearGroups.get(year)!.sort((a, b) => {
         return new Date(a.fullDate).getTime() - new Date(b.fullDate).getTime();
       });
@@ -106,6 +112,12 @@ const PriceGraph = React.memo(function PriceGraph({ currentPrice = 0, showDivide
           balancedData.push(interpolated);
         }
       }
+    };
+
+    sortedYears.forEach(year => {
+      // Pre-2021 years get half the points (half the horizontal space)
+      const targetPoints = year < 2021 ? pre2021TargetPoints : baseTargetPoints;
+      normalizeYear(year, targetPoints);
     });
 
     return balancedData.sort((a, b) => {
