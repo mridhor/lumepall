@@ -226,7 +226,7 @@ const PriceGraph = React.memo(function PriceGraph({ currentPrice = 0, showDivide
                       <div className="space-y-1">
                         <div className="flex items-center gap-2">
                           <span className="text-gray-700">Lumepall:</span>
-                          <span className="font-semibold">{data.actualSnobol?.toFixed(2)} EUR</span>
+                          <span className="font-semibold">{data.actualSnobol?.toFixed(3)} EUR</span>
                         </div>
                       </div>
                     </div>
