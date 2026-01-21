@@ -152,8 +152,7 @@ export async function GET(request: NextRequest) {
         }
       });
 
-      // Calculate normalized price of S&P 500 based on 8/8/2013 baseline of $1697.48
-      const baselinePrice = 1697.48;
+      // Calculate normalized price of S&P 500 based on 8/8/2013 baseline (already defined above)
       const normalizedPrice = actualPrice / baselinePrice;
 
       // Get current Snobol price from admin panel
