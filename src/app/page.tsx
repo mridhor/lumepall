@@ -124,6 +124,38 @@ const PriceGraph = React.memo(function PriceGraph({ currentPrice = 0, showDivide
       }
     }
 
+    // Add smooth bridge between Dec 31, 2020 and first 2021 point (April 1, 2021)
+    if (pre2021Years.length > 0 && post2021Years.length > 0) {
+      const last2020Data = yearGroups.get(pre2021Years[pre2021Years.length - 1])!.sort((a, b) => {
+        return new Date(a.fullDate).getTime() - new Date(b.fullDate).getTime();
+      });
+      const first2021Data = yearGroups.get(post2021Years[0])!.sort((a, b) => {
+        return new Date(a.fullDate).getTime() - new Date(b.fullDate).getTime();
+      });
+
+      const fromPoint = last2020Data[last2020Data.length - 1];
+      const toPoint = first2021Data[0];
+
+      // Add 3 monthly interpolation points between Dec 31, 2020 and April 1, 2021
+      // (Jan, Feb, Mar 2021)
+      const bridgeMonths = 3;
+      for (let j = 1; j <= bridgeMonths; j++) {
+        const t = j / (bridgeMonths + 1);
+        const bridgeDate = `${fromPoint.date}_bridge_${j}`;
+
+        const interpolated: ChartData = {
+          date: bridgeDate,
+          fullDate: fromPoint.fullDate,
+          sp500: fromPoint.sp500 * (1 - t) + toPoint.sp500 * t,
+          snobol: fromPoint.snobol * (1 - t) + toPoint.snobol * t,
+          totalSnobol: (fromPoint.totalSnobol || 0) * (1 - t) + (toPoint.totalSnobol || 0) * t,
+          actualSp500: (fromPoint.actualSp500 || 0) * (1 - t) + (toPoint.actualSp500 || 0) * t,
+          actualSnobol: (fromPoint.actualSnobol || 0) * (1 - t) + (toPoint.actualSnobol || 0) * t
+        };
+        normalizedData.push(interpolated);
+      }
+    }
+
     // Process post-2021 years - sample to monthly data (12 points per year)
     post2021Years.forEach(year => {
       const yearData = yearGroups.get(year)!.sort((a, b) => {
