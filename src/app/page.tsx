@@ -98,7 +98,7 @@ const PriceGraph = React.memo(function PriceGraph({ currentPrice = 0 }: PriceGra
       currentDate.setMonth(currentDate.getMonth() + 2);
     }
 
-    // Apply smoothing using moving average
+    // Apply smoothing using moving average for both Lumepall and S&P500
     const windowSize = 3;
     const smoothed = bimonthlyData.map((item, index) => {
       const start = Math.max(0, index - Math.floor(windowSize / 2));
@@ -106,10 +106,12 @@ const PriceGraph = React.memo(function PriceGraph({ currentPrice = 0 }: PriceGra
       const window = bimonthlyData.slice(start, end);
 
       const avgSnobol = window.reduce((sum, d) => sum + (d.totalSnobol || 0), 0) / window.length;
+      const avgSp500 = window.reduce((sum, d) => sum + (d.actualSp500 || 0), 0) / window.length;
 
       return {
         ...item,
-        smoothedSnobol: avgSnobol
+        smoothedSnobol: avgSnobol,
+        smoothedSp500: avgSp500
       };
     });
 
@@ -332,6 +334,17 @@ const PriceGraph = React.memo(function PriceGraph({ currentPrice = 0 }: PriceGra
               dataKey="smoothedSnobol"
               fill="#D1D2D3"
               stroke="none"
+              isAnimationActive={!hasAnimated}
+              animationDuration={1000}
+            />
+            {/* S&P500 benchmark line - light grey */}
+            <Line
+              type="monotone"
+              dataKey="smoothedSp500"
+              stroke="#D1D5DB"
+              strokeWidth={2}
+              dot={false}
+              activeDot={false}
               isAnimationActive={!hasAnimated}
               animationDuration={1000}
             />

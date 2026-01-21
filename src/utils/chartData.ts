@@ -14,6 +14,7 @@ export interface ChartData {
   actualSp500?: number; // Actual S&P 500 price
   actualSnobol?: number; // Actual Snobol price
   smoothedSnobol?: number; // Smoothed version for visual display
+  smoothedSp500?: number; // Smoothed S&P500 for benchmark line
 }
 
 // Embedded CSV contents from public/chartData.csv for default dataset (normalized Snobol series)
