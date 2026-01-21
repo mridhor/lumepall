@@ -66,9 +66,10 @@ const PriceGraph = React.memo(function PriceGraph({ currentPrice = 0, showDivide
     const post2021TotalPoints = post2021Years.reduce((sum, year) =>
       sum + yearGroups.get(year)!.length, 0);
 
-    // Make pre-2021 section longer: aim for 1.5x the post-2021 total points
-    const pre2021TotalTarget = Math.floor(post2021TotalPoints * 1.5);
-    const pre2021PointsPerYear = Math.floor(pre2021TotalTarget / pre2021Years.length);
+    // Make pre-2021 section longer and smoother: aim for 2x the post-2021 total points
+    // This ensures smooth curves with enough data points for monotone interpolation
+    const pre2021TotalTarget = Math.floor(post2021TotalPoints * 2);
+    const pre2021PointsPerYear = Math.max(52, Math.floor(pre2021TotalTarget / (pre2021Years.length - 1)));
 
     const normalizedData: ChartData[] = [];
 
