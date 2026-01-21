@@ -65,7 +65,7 @@ export async function GET(request: NextRequest) {
         if (Array.isArray(data)) {
           type DBRow = { date: string; snobol: number }
           const parsed = (data as unknown as DBRow[])
-            .map((r) => ({ date: r.date, snobol: Number(r.snobol), sp500: 1 }))
+            .map((r) => ({ date: r.date, snobol: Number(r.snobol), sp500: 1 })) // Temporary sp500, will be updated later
             // Filter out zero/invalid values - keep all positive values including early years
             .filter(d => d.date && isFinite(d.snobol) && d.snobol > 0)
 
@@ -98,15 +98,20 @@ export async function GET(request: NextRequest) {
             });
             const snobolVal = Number(valueStr);
             if (!isFinite(snobolVal)) return null;
-            return { date: formatted, snobol: snobolVal, sp500: 1 } as FinancialData;
+            return { date: formatted, snobol: snobolVal, sp500: 1 } as FinancialData; // Temporary sp500, will be updated later
           })
           .filter((v): v is FinancialData => Boolean(v));
       }
     } catch {
       // Ignore CSV issues; we'll fall back to default utils-based data
     }
-    // Using Yahoo Finance API for S&P 500 Index (^GSPC) - actual index value
-    const yahooUrl = 'https://query1.finance.yahoo.com/v8/finance/chart/%5EGSPC';
+    // Fetch historical S&P 500 data from 2013-08-08 to today
+    const baselineDate = new Date('2013-08-08');
+    const baselineTimestamp = Math.floor(baselineDate.getTime() / 1000);
+    const todayTimestamp = Math.floor(Date.now() / 1000);
+
+    // Using Yahoo Finance API for S&P 500 Index (^GSPC) with historical data
+    const yahooUrl = `https://query1.finance.yahoo.com/v8/finance/chart/%5EGSPC?period1=${baselineTimestamp}&period2=${todayTimestamp}&interval=1d`;
 
     const response = await fetch(yahooUrl, {
       headers: {
@@ -124,6 +129,28 @@ export async function GET(request: NextRequest) {
       const result = data.chart.result[0];
       const meta = result.meta;
       const actualPrice = meta.regularMarketPrice;
+
+      // Extract historical S&P500 data
+      const timestamps = result.timestamp || [];
+      const closes = result.indicators?.quote?.[0]?.close || [];
+
+      // Create a map of date -> S&P500 closing price
+      const sp500HistoricalMap = new Map<string, number>();
+      const baselinePrice = 1697.48;
+
+      timestamps.forEach((timestamp: number, index: number) => {
+        const date = new Date(timestamp * 1000);
+        const formatted = date.toLocaleDateString('en-US', {
+          month: 'short',
+          day: 'numeric',
+          year: 'numeric',
+        });
+        const closePrice = closes[index];
+        if (closePrice != null && isFinite(closePrice)) {
+          // Store normalized S&P500 value
+          sp500HistoricalMap.set(formatted, closePrice / baselinePrice);
+        }
+      });
 
       // Calculate normalized price of S&P 500 based on 8/8/2013 baseline of $1697.48
       const baselinePrice = 1697.48;
@@ -150,7 +177,9 @@ export async function GET(request: NextRequest) {
         for (const row of csvFinancialData) {
           // Only keep data with non-zero values (accept all positive values including early years)
           if (row.snobol > 0) {
-            map.set(row.date, row);
+            // Get historical S&P500 value for this date, or use baseline if not found
+            const sp500Value = sp500HistoricalMap.get(row.date) || 1;
+            map.set(row.date, { ...row, sp500: sp500Value });
           }
         }
         baseData = Array.from(map.values()).sort((a, b) => {
@@ -159,7 +188,11 @@ export async function GET(request: NextRequest) {
       } else if (sbFinancialData && sbFinancialData.length > 0) {
         // Fallback to Supabase data
         const map = new Map<string, FinancialData>();
-        for (const row of sbFinancialData) map.set(row.date, row);
+        for (const row of sbFinancialData) {
+          // Get historical S&P500 value for this date, or use baseline if not found
+          const sp500Value = sp500HistoricalMap.get(row.date) || 1;
+          map.set(row.date, { ...row, sp500: sp500Value });
+        }
         baseData = Array.from(map.values()).sort((a, b) => {
           return new Date(a.date).getTime() - new Date(b.date).getTime();
         });
