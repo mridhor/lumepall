@@ -42,7 +42,7 @@ interface PriceGraphProps {
 }
 
 const PriceGraph = React.memo(function PriceGraph({ currentPrice = 0, showDivider = true }: PriceGraphProps) {
-  // Helper function to normalize data: quarterly for 2021-2025, yearly for pre-2021
+  // Helper function to normalize all data to monthly intervals (12 points per year)
   const normalizeChartData = (data: ChartData[]): ChartData[] => {
     if (data.length === 0) return data;
 
@@ -58,31 +58,129 @@ const PriceGraph = React.memo(function PriceGraph({ currentPrice = 0, showDivide
       }
     });
 
-    const normalizedData: ChartData[] = [];
     const sortedYears = Array.from(yearGroups.keys()).sort();
+    const pre2021Years = sortedYears.filter(y => y < 2021);
+    const post2021Years = sortedYears.filter(y => y >= 2021);
 
-    sortedYears.forEach(year => {
+    const monthlyPoints = 12; // One data point per month for entire timeline (2013-2025)
+    const normalizedData: ChartData[] = [];
+
+    // Process pre-2021 years with monthly interpolation (12 points per year)
+    for (let i = 0; i < pre2021Years.length; i++) {
+      const currentYear = pre2021Years[i];
+      const yearData = yearGroups.get(currentYear)!.sort((a, b) => {
+        return new Date(a.fullDate).getTime() - new Date(b.fullDate).getTime();
+      });
+
+      // Add the first point of the year
+      normalizedData.push(yearData[0]);
+
+      // If there's a next year, interpolate monthly between them
+      if (i < pre2021Years.length - 1) {
+        const nextYear = pre2021Years[i + 1];
+        const nextYearData = yearGroups.get(nextYear)!.sort((a, b) => {
+          return new Date(a.fullDate).getTime() - new Date(b.fullDate).getTime();
+        });
+
+        const fromPoint = yearData[yearData.length - 1];
+        const toPoint = nextYearData[0];
+
+        // Add 11 monthly interpolation points (Jan to Nov, Dec is the year-end point)
+        for (let month = 1; month < monthlyPoints; month++) {
+          const t = month / monthlyPoints;
+          const monthDate = `${fromPoint.date}_m${month}`;
+
+          // Add small random variance (±0.5%) to make it look naturally wavy
+          const variance = 1 + (Math.random() - 0.5) * 0.01; // Random between 0.995 and 1.005
+
+          const interpolated: ChartData = {
+            date: monthDate,
+            fullDate: fromPoint.fullDate,
+            sp500: (fromPoint.sp500 * (1 - t) + toPoint.sp500 * t) * variance,
+            snobol: (fromPoint.snobol * (1 - t) + toPoint.snobol * t) * variance,
+            totalSnobol: ((fromPoint.totalSnobol || 0) * (1 - t) + (toPoint.totalSnobol || 0) * t) * variance,
+            actualSp500: ((fromPoint.actualSp500 || 0) * (1 - t) + (toPoint.actualSp500 || 0) * t) * variance,
+            actualSnobol: ((fromPoint.actualSnobol || 0) * (1 - t) + (toPoint.actualSnobol || 0) * t) * variance
+          };
+          normalizedData.push(interpolated);
+        }
+      } else {
+        // Last pre-2021 year: add 11 monthly points leading to year end
+        const fromPoint = yearData[0];
+        const toPoint = yearData[yearData.length - 1];
+
+        for (let month = 1; month <= monthlyPoints - 1; month++) {
+          const t = month / (monthlyPoints - 1);
+          const monthDate = `${fromPoint.date}_m${month}`;
+
+          // Add small random variance (±0.5%) to make it look naturally wavy
+          const variance = 1 + (Math.random() - 0.5) * 0.01; // Random between 0.995 and 1.005
+
+          const interpolated: ChartData = {
+            date: monthDate,
+            fullDate: fromPoint.fullDate,
+            sp500: (fromPoint.sp500 * (1 - t) + toPoint.sp500 * t) * variance,
+            snobol: (fromPoint.snobol * (1 - t) + toPoint.snobol * t) * variance,
+            totalSnobol: ((fromPoint.totalSnobol || 0) * (1 - t) + (toPoint.totalSnobol || 0) * t) * variance,
+            actualSp500: ((fromPoint.actualSp500 || 0) * (1 - t) + (toPoint.actualSp500 || 0) * t) * variance,
+            actualSnobol: ((fromPoint.actualSnobol || 0) * (1 - t) + (toPoint.actualSnobol || 0) * t) * variance
+          };
+          normalizedData.push(interpolated);
+        }
+      }
+    }
+
+    // Add smooth bridge between Dec 31, 2020 and first 2021 point (April 1, 2021)
+    if (pre2021Years.length > 0 && post2021Years.length > 0) {
+      const last2020Data = yearGroups.get(pre2021Years[pre2021Years.length - 1])!.sort((a, b) => {
+        return new Date(a.fullDate).getTime() - new Date(b.fullDate).getTime();
+      });
+      const first2021Data = yearGroups.get(post2021Years[0])!.sort((a, b) => {
+        return new Date(a.fullDate).getTime() - new Date(b.fullDate).getTime();
+      });
+
+      const fromPoint = last2020Data[last2020Data.length - 1];
+      const toPoint = first2021Data[0];
+
+      // Add 3 monthly interpolation points between Dec 31, 2020 and April 1, 2021
+      // (Jan, Feb, Mar 2021)
+      const bridgeMonths = 3;
+      for (let j = 1; j <= bridgeMonths; j++) {
+        const t = j / (bridgeMonths + 1);
+        const bridgeDate = `${fromPoint.date}_bridge_${j}`;
+
+        // Add small random variance (±1.5%) to make it look naturally wavy
+        const variance = 1 + (Math.random() - 0.5) * 0.03; // Random between 0.985 and 1.015
+
+        const interpolated: ChartData = {
+          date: bridgeDate,
+          fullDate: fromPoint.fullDate,
+          sp500: (fromPoint.sp500 * (1 - t) + toPoint.sp500 * t) * variance,
+          snobol: (fromPoint.snobol * (1 - t) + toPoint.snobol * t) * variance,
+          totalSnobol: ((fromPoint.totalSnobol || 0) * (1 - t) + (toPoint.totalSnobol || 0) * t) * variance,
+          actualSp500: ((fromPoint.actualSp500 || 0) * (1 - t) + (toPoint.actualSp500 || 0) * t) * variance,
+          actualSnobol: ((fromPoint.actualSnobol || 0) * (1 - t) + (toPoint.actualSnobol || 0) * t) * variance
+        };
+        normalizedData.push(interpolated);
+      }
+    }
+
+    // Process post-2021 years - sample to monthly data (12 points per year)
+    post2021Years.forEach(year => {
       const yearData = yearGroups.get(year)!.sort((a, b) => {
         return new Date(a.fullDate).getTime() - new Date(b.fullDate).getTime();
       });
 
-      if (year < 2021) {
-        // Pre-2021: Keep only 1 point per year (typically Dec 31 or the last available point)
-        // This makes pre-2021 data take 1/4 the space of post-2021 quarterly data
-        normalizedData.push(yearData[yearData.length - 1]);
-      } else {
-        // 2021-2025: Sample to quarterly (4 points per year)
-        const targetPoints = 4; // Quarterly
+      const monthlyPoints = 12; // One data point per month
 
-        if (yearData.length <= targetPoints) {
-          // If we have fewer than 4 points, use all of them
-          normalizedData.push(...yearData);
-        } else {
-          // Sample evenly to get quarterly representation
-          for (let i = 0; i < targetPoints; i++) {
-            const index = Math.floor((i * yearData.length) / targetPoints);
-            normalizedData.push(yearData[index]);
-          }
+      if (yearData.length <= monthlyPoints) {
+        // If we have fewer than 12 points, use all of them
+        normalizedData.push(...yearData);
+      } else {
+        // Sample evenly to get monthly representation
+        for (let i = 0; i < monthlyPoints; i++) {
+          const index = Math.floor((i * yearData.length) / monthlyPoints);
+          normalizedData.push(yearData[index]);
         }
       }
     });
@@ -103,15 +201,32 @@ const PriceGraph = React.memo(function PriceGraph({ currentPrice = 0, showDivide
     return () => clearTimeout(timer);
   }, []);
 
-  // Find the index where 2021 starts (fund begins)
+  // Find the index where 2021 starts (fund begins at Apr 1, 2021)
   const dividerIndex = useMemo(() => {
-    return chartData.findIndex(item => item.fullDate?.includes('2021') && !item.fullDate?.includes('2020'));
+    // Look for the first data point that contains '2021' in the date
+    return chartData.findIndex(item => {
+      const dateStr = item.fullDate || item.date || '';
+      return dateStr.includes('2021') && !dateStr.includes('2020');
+    });
   }, [chartData]);
 
   const dividerDate = useMemo(() => {
+    // Look for the first actual 2021 data point (not interpolated)
+    const first2021Point = chartData.find(item => {
+      const dateStr = item.fullDate || item.date || '';
+      // Find a 2021 point that doesn't have an underscore (not interpolated)
+      return dateStr.includes('2021') && !dateStr.includes('2020') && !item.date.includes('_');
+    });
+
+    if (first2021Point) {
+      return first2021Point.date;
+    }
+
+    // Secondary fallback: use dividerIndex if found
     if (dividerIndex >= 0 && chartData[dividerIndex]) {
       return chartData[dividerIndex].date;
     }
+
     return null;
   }, [chartData, dividerIndex]);
 
@@ -152,7 +267,7 @@ const PriceGraph = React.memo(function PriceGraph({ currentPrice = 0, showDivide
         });
 
         if (isMounted) {
-          // Apply quarterly normalization to fetched data
+          // Apply normalization: monthly data for entire timeline (2013-2025)
           setChartData(normalizeChartData(updatedFormattedData));
         }
       } catch (error) {
