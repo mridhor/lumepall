@@ -338,7 +338,7 @@ function parseCsv(csv: string): FinancialData[] {
 }
 
 // Cache version - increment this to force all users to refresh their data
-const CACHE_VERSION = '2.5'; // Updated: Added S&P500 historical data interpolation
+const CACHE_VERSION = '2.6'; // Updated: Fixed S&P500 normalization to Lumepall baseline
 
 export const financialData: FinancialData[] = (() => {
   // Prefer persisted client-side data
