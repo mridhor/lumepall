@@ -41,164 +41,79 @@ interface PriceGraphProps {
   showDivider?: boolean;
 }
 
-const PriceGraph = React.memo(function PriceGraph({ currentPrice = 0, showDivider = true }: PriceGraphProps) {
-  // Store original data points for tooltips
-  const [originalDataPoints, setOriginalDataPoints] = useState<ChartData[]>([]);
-
-  // Helper function to create smooth interpolated data for visual display
+const PriceGraph = React.memo(function PriceGraph({ currentPrice = 0 }: PriceGraphProps) {
+  // Helper function to create evenly spaced bimonthly data with smoothing
   const normalizeChartData = (data: ChartData[]): ChartData[] => {
     if (data.length === 0) return data;
 
-    // Store original data for tooltip reference
-    setOriginalDataPoints([...data]);
-
-    // Group data by year
-    const yearGroups = new Map<number, ChartData[]>();
-    data.forEach(item => {
-      const year = parseInt(item.fullDate.match(/\d{4}/)?.[0] || '0');
-      if (year > 0) {
-        if (!yearGroups.has(year)) {
-          yearGroups.set(year, []);
-        }
-        yearGroups.get(year)!.push(item);
-      }
-    });
-
-    const sortedYears = Array.from(yearGroups.keys()).sort();
-    const pre2021Years = sortedYears.filter(y => y < 2021);
-    const post2021Years = sortedYears.filter(y => y >= 2021);
-
-    const smoothPoints = 52; // Create 52 interpolation points per year (weekly) for smooth curves
-    const normalizedData: ChartData[] = [];
-
-    // Process pre-2021 years with monthly interpolation (12 points per year)
-    for (let i = 0; i < pre2021Years.length; i++) {
-      const currentYear = pre2021Years[i];
-      const yearData = yearGroups.get(currentYear)!.sort((a, b) => {
-        return new Date(a.fullDate).getTime() - new Date(b.fullDate).getTime();
-      });
-
-      // Add the first point of the year
-      normalizedData.push(yearData[0]);
-
-      // If there's a next year, interpolate monthly between them
-      if (i < pre2021Years.length - 1) {
-        const nextYear = pre2021Years[i + 1];
-        const nextYearData = yearGroups.get(nextYear)!.sort((a, b) => {
-          return new Date(a.fullDate).getTime() - new Date(b.fullDate).getTime();
-        });
-
-        const fromPoint = yearData[yearData.length - 1];
-        const toPoint = nextYearData[0];
-
-        // Add many interpolation points for smooth curves
-        for (let month = 1; month < smoothPoints; month++) {
-          const t = month / smoothPoints;
-          const monthDate = `${fromPoint.date}_m${month}`;
-
-          const interpolated: ChartData = {
-            date: monthDate,
-            fullDate: fromPoint.fullDate,
-            sp500: fromPoint.sp500 * (1 - t) + toPoint.sp500 * t,
-            snobol: fromPoint.snobol * (1 - t) + toPoint.snobol * t,
-            totalSnobol: (fromPoint.totalSnobol || 0) * (1 - t) + (toPoint.totalSnobol || 0) * t,
-            actualSp500: (fromPoint.actualSp500 || 0) * (1 - t) + (toPoint.actualSp500 || 0) * t,
-            actualSnobol: (fromPoint.actualSnobol || 0) * (1 - t) + (toPoint.actualSnobol || 0) * t
-          };
-          normalizedData.push(interpolated);
-        }
-      } else {
-        // Last pre-2021 year: add smooth interpolation points leading to year end
-        const fromPoint = yearData[0];
-        const toPoint = yearData[yearData.length - 1];
-
-        for (let month = 1; month <= smoothPoints - 1; month++) {
-          const t = month / (smoothPoints - 1);
-          const monthDate = `${fromPoint.date}_m${month}`;
-
-          const interpolated: ChartData = {
-            date: monthDate,
-            fullDate: fromPoint.fullDate,
-            sp500: fromPoint.sp500 * (1 - t) + toPoint.sp500 * t,
-            snobol: fromPoint.snobol * (1 - t) + toPoint.snobol * t,
-            totalSnobol: (fromPoint.totalSnobol || 0) * (1 - t) + (toPoint.totalSnobol || 0) * t,
-            actualSp500: (fromPoint.actualSp500 || 0) * (1 - t) + (toPoint.actualSp500 || 0) * t,
-            actualSnobol: (fromPoint.actualSnobol || 0) * (1 - t) + (toPoint.actualSnobol || 0) * t
-          };
-          normalizedData.push(interpolated);
-        }
-      }
-    }
-
-    // Add smooth bridge between Dec 31, 2020 and first 2021 point (April 1, 2021)
-    if (pre2021Years.length > 0 && post2021Years.length > 0) {
-      const last2020Data = yearGroups.get(pre2021Years[pre2021Years.length - 1])!.sort((a, b) => {
-        return new Date(a.fullDate).getTime() - new Date(b.fullDate).getTime();
-      });
-      const first2021Data = yearGroups.get(post2021Years[0])!.sort((a, b) => {
-        return new Date(a.fullDate).getTime() - new Date(b.fullDate).getTime();
-      });
-
-      const fromPoint = last2020Data[last2020Data.length - 1];
-      const toPoint = first2021Data[0];
-
-      // Add many smooth interpolation points between Dec 31, 2020 and first 2021 point
-      const bridgePoints = 16; // More points for smoother bridge
-      for (let j = 1; j <= bridgePoints; j++) {
-        const t = j / (bridgePoints + 1);
-        const bridgeDate = `${fromPoint.date}_bridge_${j}`;
-
-        const interpolated: ChartData = {
-          date: bridgeDate,
-          fullDate: fromPoint.fullDate,
-          sp500: fromPoint.sp500 * (1 - t) + toPoint.sp500 * t,
-          snobol: fromPoint.snobol * (1 - t) + toPoint.snobol * t,
-          totalSnobol: (fromPoint.totalSnobol || 0) * (1 - t) + (toPoint.totalSnobol || 0) * t,
-          actualSp500: (fromPoint.actualSp500 || 0) * (1 - t) + (toPoint.actualSp500 || 0) * t,
-          actualSnobol: (fromPoint.actualSnobol || 0) * (1 - t) + (toPoint.actualSnobol || 0) * t
-        };
-        normalizedData.push(interpolated);
-      }
-    }
-
-    // Process post-2021 years - add smooth interpolation between all points
-    post2021Years.forEach(year => {
-      const yearData = yearGroups.get(year)!.sort((a, b) => {
-        return new Date(a.fullDate).getTime() - new Date(b.fullDate).getTime();
-      });
-
-      // Add each original point and interpolate smoothly between them
-      for (let i = 0; i < yearData.length; i++) {
-        normalizedData.push(yearData[i]);
-
-        // Add interpolation points between consecutive data points
-        if (i < yearData.length - 1) {
-          const fromPoint = yearData[i];
-          const toPoint = yearData[i + 1];
-          const interpPoints = 8; // Add 8 points between each pair for smooth curves
-
-          for (let j = 1; j < interpPoints; j++) {
-            const t = j / interpPoints;
-            const interpDate = `${fromPoint.date}_i${j}`;
-
-            const interpolated: ChartData = {
-              date: interpDate,
-              fullDate: fromPoint.fullDate,
-              sp500: fromPoint.sp500 * (1 - t) + toPoint.sp500 * t,
-              snobol: fromPoint.snobol * (1 - t) + toPoint.snobol * t,
-              totalSnobol: (fromPoint.totalSnobol || 0) * (1 - t) + (toPoint.totalSnobol || 0) * t,
-              actualSp500: (fromPoint.actualSp500 || 0) * (1 - t) + (toPoint.actualSp500 || 0) * t,
-              actualSnobol: (fromPoint.actualSnobol || 0) * (1 - t) + (toPoint.actualSnobol || 0) * t
-            };
-            normalizedData.push(interpolated);
-          }
-        }
-      }
-    });
-
-    return normalizedData.sort((a, b) => {
+    const sorted = [...data].sort((a, b) => {
       return new Date(a.fullDate).getTime() - new Date(b.fullDate).getTime();
     });
+
+    // Get first and last dates
+    const firstDate = new Date(sorted[0].fullDate);
+    const lastDate = new Date(sorted[sorted.length - 1].fullDate);
+
+    // Create evenly spaced bimonthly points
+    const bimonthlyData: ChartData[] = [];
+    const currentDate = new Date(firstDate);
+
+    while (currentDate <= lastDate) {
+      const currentTime = currentDate.getTime();
+
+      // Find the two closest data points to interpolate between
+      let before = sorted[0];
+      let after = sorted[sorted.length - 1];
+
+      for (let i = 0; i < sorted.length - 1; i++) {
+        const itemTime = new Date(sorted[i].fullDate).getTime();
+        const nextTime = new Date(sorted[i + 1].fullDate).getTime();
+
+        if (currentTime >= itemTime && currentTime <= nextTime) {
+          before = sorted[i];
+          after = sorted[i + 1];
+          break;
+        }
+      }
+
+      // Interpolate values
+      const beforeTime = new Date(before.fullDate).getTime();
+      const afterTime = new Date(after.fullDate).getTime();
+      const t = afterTime === beforeTime ? 0 : (currentTime - beforeTime) / (afterTime - beforeTime);
+
+      const interpolatedValue = (before.totalSnobol || 0) * (1 - t) + (after.totalSnobol || 0) * t;
+      const interpolatedActual = (before.actualSnobol || 0) * (1 - t) + (after.actualSnobol || 0) * t;
+
+      bimonthlyData.push({
+        date: currentDate.toISOString().split('T')[0],
+        fullDate: currentDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
+        sp500: before.sp500 * (1 - t) + after.sp500 * t,
+        snobol: before.snobol * (1 - t) + after.snobol * t,
+        totalSnobol: interpolatedValue,
+        actualSnobol: interpolatedActual,
+        actualSp500: (before.actualSp500 || 0) * (1 - t) + (after.actualSp500 || 0) * t
+      });
+
+      // Move to next bimonthly point (2 months)
+      currentDate.setMonth(currentDate.getMonth() + 2);
+    }
+
+    // Apply smoothing using moving average
+    const windowSize = 3;
+    const smoothed = bimonthlyData.map((item, index) => {
+      const start = Math.max(0, index - Math.floor(windowSize / 2));
+      const end = Math.min(bimonthlyData.length, index + Math.ceil(windowSize / 2));
+      const window = bimonthlyData.slice(start, end);
+
+      const avgSnobol = window.reduce((sum, d) => sum + (d.totalSnobol || 0), 0) / window.length;
+
+      return {
+        ...item,
+        smoothedSnobol: avgSnobol
+      };
+    });
+
+    return smoothed;
   };
 
   const [chartData, setChartData] = useState<ChartData[]>(() => {
@@ -388,26 +303,14 @@ const PriceGraph = React.memo(function PriceGraph({ currentPrice = 0, showDivide
             <Tooltip
               content={({ active, payload }) => {
                 if (active && payload && payload.length) {
-                  const hoveredData = payload[0].payload;
-
-                  // Find the nearest original data point for tooltip display
-                  let nearestOriginal = hoveredData;
-                  if (originalDataPoints.length > 0) {
-                    // Find the closest original point by comparing values
-                    const distances = originalDataPoints.map(original => {
-                      return Math.abs((original.actualSnobol || 0) - (hoveredData.actualSnobol || 0));
-                    });
-                    const minIndex = distances.indexOf(Math.min(...distances));
-                    nearestOriginal = originalDataPoints[minIndex];
-                  }
-
-                  const isLatestPoint = nearestOriginal === originalDataPoints[originalDataPoints.length - 1];
+                  const data = payload[0].payload;
+                  const isLatestPoint = data === chartData[chartData.length - 1];
                   const displayDate = isLatestPoint ?
                     new Date().toLocaleDateString('en-US', {
                       month: 'short',
                       day: 'numeric',
                       year: 'numeric'
-                    }) : nearestOriginal.fullDate;
+                    }) : data.fullDate;
 
                   return (
                     <div className="bg-white p-3 rounded shadow-sm border text-sm min-w-[200px]">
@@ -415,7 +318,7 @@ const PriceGraph = React.memo(function PriceGraph({ currentPrice = 0, showDivide
                       <div className="space-y-1">
                         <div className="flex items-center gap-2">
                           <span className="text-gray-700">Lumepall:</span>
-                          <span className="font-semibold">{nearestOriginal.actualSnobol?.toFixed(3)} EUR</span>
+                          <span className="font-semibold">{data.actualSnobol?.toFixed(3)} EUR</span>
                         </div>
                       </div>
                     </div>
@@ -425,20 +328,33 @@ const PriceGraph = React.memo(function PriceGraph({ currentPrice = 0, showDivide
               }}
             />
             <Area
-              type="natural"
-              dataKey="totalSnobol"
+              type="monotone"
+              dataKey="smoothedSnobol"
               fill="#D1D2D3"
               stroke="none"
               isAnimationActive={!hasAnimated}
               animationDuration={1000}
             />
+            {/* Invisible line with actual data for tooltips */}
             <Line
-              type="natural"
+              type="monotone"
               dataKey="totalSnobol"
               stroke="#000000"
+              strokeOpacity={0}
               strokeWidth={2}
               dot={false}
               activeDot={{ r: 4.5, fill: "white", stroke: "black", strokeWidth: 3.1 }}
+              isAnimationActive={!hasAnimated}
+              animationDuration={1000}
+            />
+            {/* Visible smoothed line */}
+            <Line
+              type="monotone"
+              dataKey="smoothedSnobol"
+              stroke="#000000"
+              strokeWidth={2}
+              dot={false}
+              activeDot={false}
               isAnimationActive={!hasAnimated}
               animationDuration={1000}
             />

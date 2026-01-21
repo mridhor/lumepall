@@ -13,6 +13,7 @@ export interface ChartData {
   totalSnobol?: number; // Optional field for total Snobol price
   actualSp500?: number; // Actual S&P 500 price
   actualSnobol?: number; // Actual Snobol price
+  smoothedSnobol?: number; // Smoothed version for visual display
 }
 
 // Embedded CSV contents from public/chartData.csv for default dataset (normalized Snobol series)
