@@ -42,7 +42,7 @@ interface PriceGraphProps {
 }
 
 const PriceGraph = React.memo(function PriceGraph({ currentPrice = 0, showDivider = true }: PriceGraphProps) {
-  // Helper function to normalize data: bi-monthly for 2021-2025, yearly for pre-2021
+  // Helper function to make pre-2021 section longer while keeping all post-2021 detail
   const normalizeChartData = (data: ChartData[]): ChartData[] => {
     if (data.length === 0) return data;
 
@@ -58,33 +58,69 @@ const PriceGraph = React.memo(function PriceGraph({ currentPrice = 0, showDivide
       }
     });
 
-    const normalizedData: ChartData[] = [];
     const sortedYears = Array.from(yearGroups.keys()).sort();
+    const pre2021Years = sortedYears.filter(y => y < 2021);
+    const post2021Years = sortedYears.filter(y => y >= 2021);
 
-    sortedYears.forEach(year => {
+    // Calculate total post-2021 data points (keep all detail)
+    const post2021TotalPoints = post2021Years.reduce((sum, year) =>
+      sum + yearGroups.get(year)!.length, 0);
+
+    // Make pre-2021 section longer: aim for 1.5x the post-2021 total points
+    const pre2021TotalTarget = Math.floor(post2021TotalPoints * 1.5);
+    const pre2021PointsPerYear = Math.floor(pre2021TotalTarget / pre2021Years.length);
+
+    const normalizedData: ChartData[] = [];
+
+    const interpolateYear = (year: number, targetPoints: number) => {
       const yearData = yearGroups.get(year)!.sort((a, b) => {
         return new Date(a.fullDate).getTime() - new Date(b.fullDate).getTime();
       });
 
-      if (year < 2021) {
-        // Pre-2021: Keep only 1 point per year (typically Dec 31 or the last available point)
-        // This makes pre-2021 data take 1/6 the space of post-2021 bi-monthly data
-        normalizedData.push(yearData[yearData.length - 1]);
-      } else {
-        // 2021-2025: Sample to bi-monthly (6 points per year)
-        const targetPoints = 6; // Bi-monthly (every 2 months)
+      const currentPoints = yearData.length;
 
-        if (yearData.length <= targetPoints) {
-          // If we have fewer than 6 points, use all of them
-          normalizedData.push(...yearData);
-        } else {
-          // Sample evenly to get bi-monthly representation
-          for (let i = 0; i < targetPoints; i++) {
-            const index = Math.floor((i * yearData.length) / targetPoints);
-            normalizedData.push(yearData[index]);
-          }
+      if (currentPoints >= targetPoints) {
+        // Keep all points if we already have enough
+        normalizedData.push(...yearData);
+      } else {
+        // Interpolate to add more points
+        normalizedData.push(...yearData);
+
+        const pointsToAdd = targetPoints - currentPoints;
+        for (let i = 0; i < pointsToAdd; i++) {
+          const position = (i + 1) / (pointsToAdd + 1);
+          const baseIndex = Math.floor(position * (currentPoints - 1));
+          const nextIndex = Math.min(baseIndex + 1, currentPoints - 1);
+
+          const base = yearData[baseIndex];
+          const next = yearData[nextIndex];
+          const t = position * (currentPoints - 1) - baseIndex;
+
+          const interpolated: ChartData = {
+            date: base.date,
+            fullDate: base.fullDate,
+            sp500: base.sp500 * (1 - t) + next.sp500 * t,
+            snobol: base.snobol * (1 - t) + next.snobol * t,
+            totalSnobol: (base.totalSnobol || 0) * (1 - t) + (next.totalSnobol || 0) * t,
+            actualSp500: (base.actualSp500 || 0) * (1 - t) + (next.actualSp500 || 0) * t,
+            actualSnobol: (base.actualSnobol || 0) * (1 - t) + (next.actualSnobol || 0) * t
+          };
+          normalizedData.push(interpolated);
         }
       }
+    };
+
+    // Process pre-2021 years with interpolation to make them longer
+    pre2021Years.forEach(year => {
+      interpolateYear(year, pre2021PointsPerYear);
+    });
+
+    // Process post-2021 years - keep ALL original data points
+    post2021Years.forEach(year => {
+      const yearData = yearGroups.get(year)!.sort((a, b) => {
+        return new Date(a.fullDate).getTime() - new Date(b.fullDate).getTime();
+      });
+      normalizedData.push(...yearData);
     });
 
     return normalizedData.sort((a, b) => {
@@ -152,7 +188,7 @@ const PriceGraph = React.memo(function PriceGraph({ currentPrice = 0, showDivide
         });
 
         if (isMounted) {
-          // Apply bi-monthly normalization to fetched data
+          // Apply normalization: expand pre-2021, keep all post-2021 detail
           setChartData(normalizeChartData(updatedFormattedData));
         }
       } catch (error) {
