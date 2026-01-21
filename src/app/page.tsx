@@ -343,18 +343,18 @@ const PriceGraph = React.memo(function PriceGraph({ currentPrice = 0 }: PriceGra
               strokeOpacity={0}
               strokeWidth={2}
               dot={false}
-              activeDot={{ r: 4.5, fill: "white", stroke: "black", strokeWidth: 3.1 }}
+              activeDot={false}
               isAnimationActive={!hasAnimated}
               animationDuration={1000}
             />
-            {/* Visible smoothed line */}
+            {/* Visible smoothed line with active dot */}
             <Line
               type="monotone"
               dataKey="smoothedSnobol"
               stroke="#000000"
               strokeWidth={2}
               dot={false}
-              activeDot={false}
+              activeDot={{ r: 4.5, fill: "white", stroke: "black", strokeWidth: 3.1 }}
               isAnimationActive={!hasAnimated}
               animationDuration={1000}
             />
