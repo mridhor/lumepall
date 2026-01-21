@@ -18,6 +18,40 @@ export interface ChartData {
   normalizedSp500?: number; // Normalized S&P500 in EUR (same scale as Lumepall)
 }
 
+// S&P500 normalized values (baseline Aug 8, 2013 = 1.0)
+const sp500YearEndValues: Record<string, number> = {
+  "2013": 1,
+  "2014": 1.2303,
+  "2015": 1.2203,
+  "2016": 1.324,
+  "2017": 1.5812,
+  "2018": 1.4701,
+  "2019": 1.9051,
+  "2020": 2.2071,
+  "2021": 2.8261,
+  "2022": 2.2707,
+  "2023": 2.8209,
+  "2024": 3.4933,
+  "2025": 4.033,  // Estimated based on current value
+  "2026": 4.004   // Current as of Jan 2026
+};
+
+// Function to get interpolated S&P500 value for any date
+function getSp500ForDate(dateStr: string): number {
+  const date = new Date(dateStr);
+  const year = date.getFullYear();
+  const yearStart = new Date(year, 0, 1);
+  const yearEnd = new Date(year, 11, 31);
+  const yearProgress = (date.getTime() - yearStart.getTime()) / (yearEnd.getTime() - yearStart.getTime());
+
+  // Get year-end values for current and previous year
+  const currentYearValue = sp500YearEndValues[year.toString()] || sp500YearEndValues[(year - 1).toString()] || 1;
+  const previousYearValue = sp500YearEndValues[(year - 1).toString()] || 1;
+
+  // Linear interpolation between previous year-end and current year-end
+  return previousYearValue + (currentYearValue - previousYearValue) * yearProgress;
+}
+
 // Embedded CSV contents from public/chartData.csv for default dataset (normalized Snobol series)
 const embeddedCsv = `datetime_utc,value
 2013-08-08 00:00:00,0.075
@@ -290,8 +324,10 @@ function parseCsv(csv: string): FinancialData[] {
       });
       const val = Number(valueStr);
       if (!isFinite(val)) continue;
+      // Get interpolated S&P500 value for this date
+      const sp500Value = getSp500ForDate(dateObj.toISOString());
       // Keep last value per date
-      map.set(formatted, { date: formatted, snobol: val, sp500: 1 });
+      map.set(formatted, { date: formatted, snobol: val, sp500: sp500Value });
     }
     return Array.from(map.values()).sort((a, b) => {
       return new Date(a.date).getTime() - new Date(b.date).getTime();
@@ -302,7 +338,7 @@ function parseCsv(csv: string): FinancialData[] {
 }
 
 // Cache version - increment this to force all users to refresh their data
-const CACHE_VERSION = '2.4'; // Updated: Simplified to monthly Nov/Dec 2025 data
+const CACHE_VERSION = '2.5'; // Updated: Added S&P500 historical data interpolation
 
 export const financialData: FinancialData[] = (() => {
   // Prefer persisted client-side data
