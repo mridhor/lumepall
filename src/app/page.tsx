@@ -84,21 +84,18 @@ const PriceGraph = React.memo(function PriceGraph({ currentPrice = 0 }: PriceGra
       const interpolatedValue = (before.totalSnobol || 0) * (1 - t) + (after.totalSnobol || 0) * t;
       const interpolatedActual = (before.actualSnobol || 0) * (1 - t) + (after.actualSnobol || 0) * t;
 
-      // Calculate normalized S&P500 in EUR (same scale as Lumepall)
-      // Use the normalized sp500 ratio multiplied by the same baseline as totalSnobol
-      const interpolatedSp500Ratio = before.sp500 * (1 - t) + after.sp500 * t;
-      const baselineSnobol = (before.totalSnobol || 0) / (before.snobol || 1); // Extract baseline
-      const interpolatedSp500Normalized = interpolatedSp500Ratio * baselineSnobol;
+      // S&P500 is already a normalized ratio (just like totalSnobol), so interpolate it directly
+      const interpolatedSp500 = before.sp500 * (1 - t) + after.sp500 * t;
 
       bimonthlyData.push({
         date: currentDate.toISOString().split('T')[0],
         fullDate: currentDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
-        sp500: before.sp500 * (1 - t) + after.sp500 * t,
+        sp500: interpolatedSp500,
         snobol: before.snobol * (1 - t) + after.snobol * t,
         totalSnobol: interpolatedValue,
         actualSnobol: interpolatedActual,
         actualSp500: (before.actualSp500 || 0) * (1 - t) + (after.actualSp500 || 0) * t,
-        normalizedSp500: interpolatedSp500Normalized
+        normalizedSp500: interpolatedSp500
       });
 
       // Move to next bimonthly point (2 months)
