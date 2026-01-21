@@ -99,8 +99,11 @@ const PriceGraph = React.memo(function PriceGraph({ currentPrice = 0, showDivide
         for (let j = 1; j < interpolationSteps; j++) {
           const t = j / interpolationSteps;
 
+          // Create unique intermediate date for x-axis positioning
+          const intermediateDate = `${fromPoint.date}_${j}`;
+
           const interpolated: ChartData = {
-            date: fromPoint.date,
+            date: intermediateDate,
             fullDate: fromPoint.fullDate,
             sp500: fromPoint.sp500 * (1 - t) + toPoint.sp500 * t,
             snobol: fromPoint.snobol * (1 - t) + toPoint.snobol * t,
@@ -147,13 +150,23 @@ const PriceGraph = React.memo(function PriceGraph({ currentPrice = 0, showDivide
   }, [chartData]);
 
   const dividerDate = useMemo(() => {
+    // Look for the first actual 2021 data point (not interpolated)
+    const first2021Point = chartData.find(item => {
+      const dateStr = item.fullDate || item.date || '';
+      // Find a 2021 point that doesn't have an underscore (not interpolated)
+      return dateStr.includes('2021') && !dateStr.includes('2020') && !item.date.includes('_');
+    });
+
+    if (first2021Point) {
+      return first2021Point.date;
+    }
+
+    // Secondary fallback: use dividerIndex if found
     if (dividerIndex >= 0 && chartData[dividerIndex]) {
-      // Use the date field for the ReferenceLine x-axis value
       return chartData[dividerIndex].date;
     }
-    // Fallback: try to find any 2021 data point
-    const fallback2021 = chartData.find(item => (item.fullDate || item.date || '').includes('2021'));
-    return fallback2021?.date || null;
+
+    return null;
   }, [chartData, dividerIndex]);
 
   useEffect(() => {
