@@ -42,7 +42,7 @@ interface PriceGraphProps {
 }
 
 const PriceGraph = React.memo(function PriceGraph({ currentPrice = 0, showDivider = true }: PriceGraphProps) {
-  // Helper function to normalize data: quarterly for 2021-2025, yearly for pre-2021
+  // Helper function to normalize data: bi-monthly for 2021-2025, yearly for pre-2021
   const normalizeChartData = (data: ChartData[]): ChartData[] => {
     if (data.length === 0) return data;
 
@@ -68,17 +68,17 @@ const PriceGraph = React.memo(function PriceGraph({ currentPrice = 0, showDivide
 
       if (year < 2021) {
         // Pre-2021: Keep only 1 point per year (typically Dec 31 or the last available point)
-        // This makes pre-2021 data take 1/4 the space of post-2021 quarterly data
+        // This makes pre-2021 data take 1/6 the space of post-2021 bi-monthly data
         normalizedData.push(yearData[yearData.length - 1]);
       } else {
-        // 2021-2025: Sample to quarterly (4 points per year)
-        const targetPoints = 4; // Quarterly
+        // 2021-2025: Sample to bi-monthly (6 points per year)
+        const targetPoints = 6; // Bi-monthly (every 2 months)
 
         if (yearData.length <= targetPoints) {
-          // If we have fewer than 4 points, use all of them
+          // If we have fewer than 6 points, use all of them
           normalizedData.push(...yearData);
         } else {
-          // Sample evenly to get quarterly representation
+          // Sample evenly to get bi-monthly representation
           for (let i = 0; i < targetPoints; i++) {
             const index = Math.floor((i * yearData.length) / targetPoints);
             normalizedData.push(yearData[index]);
@@ -152,7 +152,7 @@ const PriceGraph = React.memo(function PriceGraph({ currentPrice = 0, showDivide
         });
 
         if (isMounted) {
-          // Apply quarterly normalization to fetched data
+          // Apply bi-monthly normalization to fetched data
           setChartData(normalizeChartData(updatedFormattedData));
         }
       } catch (error) {
