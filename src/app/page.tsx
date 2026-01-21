@@ -42,47 +42,58 @@ interface PriceGraphProps {
 }
 
 const PriceGraph = React.memo(function PriceGraph({ currentPrice = 0, showDivider = true }: PriceGraphProps) {
-  // Helper function to add interpolated points for pre-2021 data
-  const expandPreFundData = (data: ChartData[]): ChartData[] => {
-    const expandedData: ChartData[] = [];
-    for (let i = 0; i < data.length; i++) {
-      const current = data[i];
-      expandedData.push(current);
+  // Helper function to normalize data: quarterly for 2021-2025, yearly for pre-2021
+  const normalizeChartData = (data: ChartData[]): ChartData[] => {
+    if (data.length === 0) return data;
 
-      // Check if we should add an interpolated point
-      if (i < data.length - 1) {
-        const next = data[i + 1];
+    // Group data by year
+    const yearGroups = new Map<number, ChartData[]>();
+    data.forEach(item => {
+      const year = parseInt(item.fullDate.match(/\d{4}/)?.[0] || '0');
+      if (year > 0) {
+        if (!yearGroups.has(year)) {
+          yearGroups.set(year, []);
+        }
+        yearGroups.get(year)!.push(item);
+      }
+    });
 
-        // Parse years from dates
-        const currentYear = current.fullDate.match(/\d{4}/)?.[0];
-        const nextYear = next.fullDate.match(/\d{4}/)?.[0];
+    const normalizedData: ChartData[] = [];
+    const sortedYears = Array.from(yearGroups.keys()).sort();
 
-        // Only interpolate between yearly pre-2021 data points
-        if (currentYear && nextYear &&
-            parseInt(currentYear) < 2021 &&
-            parseInt(nextYear) < 2021 &&
-            parseInt(nextYear) > parseInt(currentYear)) {
+    sortedYears.forEach(year => {
+      const yearData = yearGroups.get(year)!.sort((a, b) => {
+        return new Date(a.fullDate).getTime() - new Date(b.fullDate).getTime();
+      });
 
-          // Add a midpoint with interpolated values
-          const midDate = `Jun 30, ${currentYear}`;
-          const interpolated: ChartData = {
-            date: midDate,
-            fullDate: midDate,
-            sp500: (current.sp500 + next.sp500) / 2,
-            snobol: (current.snobol + next.snobol) / 2,
-            totalSnobol: ((current.totalSnobol || 0) + (next.totalSnobol || 0)) / 2,
-            actualSp500: ((current.actualSp500 || 0) + (next.actualSp500 || 0)) / 2,
-            actualSnobol: ((current.actualSnobol || 0) + (next.actualSnobol || 0)) / 2
-          };
-          expandedData.push(interpolated);
+      if (year < 2021) {
+        // Pre-2021: Keep only 1 point per year (typically Dec 31 or the last available point)
+        // This makes pre-2021 data take 1/4 the space of post-2021 quarterly data
+        normalizedData.push(yearData[yearData.length - 1]);
+      } else {
+        // 2021-2025: Sample to quarterly (4 points per year)
+        const targetPoints = 4; // Quarterly
+
+        if (yearData.length <= targetPoints) {
+          // If we have fewer than 4 points, use all of them
+          normalizedData.push(...yearData);
+        } else {
+          // Sample evenly to get quarterly representation
+          for (let i = 0; i < targetPoints; i++) {
+            const index = Math.floor((i * yearData.length) / targetPoints);
+            normalizedData.push(yearData[index]);
+          }
         }
       }
-    }
-    return expandedData;
+    });
+
+    return normalizedData.sort((a, b) => {
+      return new Date(a.fullDate).getTime() - new Date(b.fullDate).getTime();
+    });
   };
 
   const [chartData, setChartData] = useState<ChartData[]>(() => {
-    return expandPreFundData(formatAreaChartData())
+    return normalizeChartData(formatAreaChartData())
   });
   const [hasAnimated, setHasAnimated] = useState(false);
 
@@ -141,8 +152,8 @@ const PriceGraph = React.memo(function PriceGraph({ currentPrice = 0, showDivide
         });
 
         if (isMounted) {
-          // Apply the same pre-2021 expansion to fetched data
-          setChartData(expandPreFundData(updatedFormattedData));
+          // Apply quarterly normalization to fetched data
+          setChartData(normalizeChartData(updatedFormattedData));
         }
       } catch (error) {
         console.error('Failed to fetch prices:', error);
