@@ -619,20 +619,21 @@ const ValueGraph = React.memo(function ValueGraph({ currency }: ValueGraphProps)
               tickLine={false}
               tick={{ fontSize: isMobile ? 10 : 11, fill: '#6b7280', fontWeight: 500 }}
               ticks={(() => {
-                // Use index-based distribution for even spacing
-                const tickCount = isMobile ? 5 : 10;
-                const step = Math.floor(displayData.length / tickCount);
-                const yearTicks: string[] = [];
-                for (let i = 0; i < tickCount; i++) {
-                  const index = i * step;
-                  if (displayData[index]) {
-                    yearTicks.push(displayData[index].date);
+                // Extract unique years and show one tick per year
+                const yearMap = new Map<string, string>();
+                displayData.forEach(item => {
+                  const yearMatch = item.date.match(/\d{4}/);
+                  if (yearMatch) {
+                    const year = yearMatch[0];
+                    // Store the first occurrence of each year
+                    if (!yearMap.has(year)) {
+                      yearMap.set(year, item.date);
+                    }
                   }
-                }
-                // Always include the last data point
-                if (displayData.length > 0) {
-                  yearTicks.push(displayData[displayData.length - 1].date);
-                }
+                });
+
+                // Convert to array and return
+                const yearTicks = Array.from(yearMap.values());
                 return yearTicks;
               })()}
               tickFormatter={(value) => {
