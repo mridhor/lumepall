@@ -402,7 +402,7 @@ const PriceGraph = React.memo(function PriceGraph({ currentPrice = 0, showDivide
               }}
             />
             <Area
-              type="monotone"
+              type="basis"
               dataKey="totalSnobol"
               fill="#D1D2D3"
               stroke="none"
@@ -410,7 +410,7 @@ const PriceGraph = React.memo(function PriceGraph({ currentPrice = 0, showDivide
               animationDuration={1000}
             />
             <Line
-              type="monotone"
+              type="basis"
               dataKey="totalSnobol"
               stroke="#000000"
               strokeWidth={2}
@@ -644,7 +644,7 @@ const ValueGraph = React.memo(function ValueGraph({ currency }: ValueGraphProps)
               }}
             />
             <Area
-              type="monotone"
+              type="basis"
               dataKey="total_assets"
               fill="#000000"
               stroke="none"
@@ -653,7 +653,7 @@ const ValueGraph = React.memo(function ValueGraph({ currency }: ValueGraphProps)
               animationDuration={1000}
             />
             <Line
-              type="monotone"
+              type="basis"
               dataKey="total_assets"
               stroke="#000000"
               strokeOpacity={0}
