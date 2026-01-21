@@ -90,8 +90,8 @@ const PriceGraph = React.memo(function PriceGraph({ currentPrice = 0, showDivide
           const t = month / monthlyPoints;
           const monthDate = `${fromPoint.date}_m${month}`;
 
-          // Add small random variance (±1.5%) to make it look naturally wavy
-          const variance = 1 + (Math.random() - 0.5) * 0.03; // Random between 0.985 and 1.015
+          // Add small random variance (±0.5%) to make it look naturally wavy
+          const variance = 1 + (Math.random() - 0.5) * 0.01; // Random between 0.995 and 1.005
 
           const interpolated: ChartData = {
             date: monthDate,
@@ -113,8 +113,8 @@ const PriceGraph = React.memo(function PriceGraph({ currentPrice = 0, showDivide
           const t = month / (monthlyPoints - 1);
           const monthDate = `${fromPoint.date}_m${month}`;
 
-          // Add small random variance (±1.5%) to make it look naturally wavy
-          const variance = 1 + (Math.random() - 0.5) * 0.03; // Random between 0.985 and 1.015
+          // Add small random variance (±0.5%) to make it look naturally wavy
+          const variance = 1 + (Math.random() - 0.5) * 0.01; // Random between 0.995 and 1.005
 
           const interpolated: ChartData = {
             date: monthDate,
