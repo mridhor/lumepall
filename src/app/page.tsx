@@ -72,48 +72,46 @@ const PriceGraph = React.memo(function PriceGraph({ currentPrice = 0, showDivide
 
     const normalizedData: ChartData[] = [];
 
-    const interpolateYear = (year: number, targetPoints: number) => {
-      const yearData = yearGroups.get(year)!.sort((a, b) => {
+    // Process pre-2021 years with smooth interpolation to make them longer
+    // For each consecutive pair of years, create smooth interpolated points
+    for (let i = 0; i < pre2021Years.length; i++) {
+      const currentYear = pre2021Years[i];
+      const yearData = yearGroups.get(currentYear)!.sort((a, b) => {
         return new Date(a.fullDate).getTime() - new Date(b.fullDate).getTime();
       });
 
-      const currentPoints = yearData.length;
+      // Add the current year's data point(s)
+      normalizedData.push(...yearData);
 
-      if (currentPoints >= targetPoints) {
-        // Keep all points if we already have enough
-        normalizedData.push(...yearData);
-      } else {
-        // Interpolate to add more points
-        normalizedData.push(...yearData);
+      // If there's a next year, interpolate smoothly between them
+      if (i < pre2021Years.length - 1) {
+        const nextYear = pre2021Years[i + 1];
+        const nextYearData = yearGroups.get(nextYear)!.sort((a, b) => {
+          return new Date(a.fullDate).getTime() - new Date(b.fullDate).getTime();
+        });
 
-        const pointsToAdd = targetPoints - currentPoints;
-        for (let i = 0; i < pointsToAdd; i++) {
-          const position = (i + 1) / (pointsToAdd + 1);
-          const baseIndex = Math.floor(position * (currentPoints - 1));
-          const nextIndex = Math.min(baseIndex + 1, currentPoints - 1);
+        // Get the last point of current year and first point of next year
+        const fromPoint = yearData[yearData.length - 1];
+        const toPoint = nextYearData[0];
 
-          const base = yearData[baseIndex];
-          const next = yearData[nextIndex];
-          const t = position * (currentPoints - 1) - baseIndex;
+        // Add many smooth interpolation points between years (e.g., 50 points per year gap)
+        const interpolationSteps = pre2021PointsPerYear - 1;
+        for (let j = 1; j < interpolationSteps; j++) {
+          const t = j / interpolationSteps;
 
           const interpolated: ChartData = {
-            date: base.date,
-            fullDate: base.fullDate,
-            sp500: base.sp500 * (1 - t) + next.sp500 * t,
-            snobol: base.snobol * (1 - t) + next.snobol * t,
-            totalSnobol: (base.totalSnobol || 0) * (1 - t) + (next.totalSnobol || 0) * t,
-            actualSp500: (base.actualSp500 || 0) * (1 - t) + (next.actualSp500 || 0) * t,
-            actualSnobol: (base.actualSnobol || 0) * (1 - t) + (next.actualSnobol || 0) * t
+            date: fromPoint.date,
+            fullDate: fromPoint.fullDate,
+            sp500: fromPoint.sp500 * (1 - t) + toPoint.sp500 * t,
+            snobol: fromPoint.snobol * (1 - t) + toPoint.snobol * t,
+            totalSnobol: (fromPoint.totalSnobol || 0) * (1 - t) + (toPoint.totalSnobol || 0) * t,
+            actualSp500: (fromPoint.actualSp500 || 0) * (1 - t) + (toPoint.actualSp500 || 0) * t,
+            actualSnobol: (fromPoint.actualSnobol || 0) * (1 - t) + (toPoint.actualSnobol || 0) * t
           };
           normalizedData.push(interpolated);
         }
       }
-    };
-
-    // Process pre-2021 years with interpolation to make them longer
-    pre2021Years.forEach(year => {
-      interpolateYear(year, pre2021PointsPerYear);
-    });
+    }
 
     // Process post-2021 years - keep ALL original data points
     post2021Years.forEach(year => {
@@ -139,16 +137,23 @@ const PriceGraph = React.memo(function PriceGraph({ currentPrice = 0, showDivide
     return () => clearTimeout(timer);
   }, []);
 
-  // Find the index where 2021 starts (fund begins)
+  // Find the index where 2021 starts (fund begins at Apr 1, 2021)
   const dividerIndex = useMemo(() => {
-    return chartData.findIndex(item => item.fullDate?.includes('2021') && !item.fullDate?.includes('2020'));
+    // Look for the first data point that contains '2021' in the date
+    return chartData.findIndex(item => {
+      const dateStr = item.fullDate || item.date || '';
+      return dateStr.includes('2021') && !dateStr.includes('2020');
+    });
   }, [chartData]);
 
   const dividerDate = useMemo(() => {
     if (dividerIndex >= 0 && chartData[dividerIndex]) {
+      // Use the date field for the ReferenceLine x-axis value
       return chartData[dividerIndex].date;
     }
-    return null;
+    // Fallback: try to find any 2021 data point
+    const fallback2021 = chartData.find(item => (item.fullDate || item.date || '').includes('2021'));
+    return fallback2021?.date || null;
   }, [chartData, dividerIndex]);
 
   useEffect(() => {
