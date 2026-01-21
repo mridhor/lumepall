@@ -90,14 +90,17 @@ const PriceGraph = React.memo(function PriceGraph({ currentPrice = 0, showDivide
           const t = month / monthlyPoints;
           const monthDate = `${fromPoint.date}_m${month}`;
 
+          // Add small random variance (±1.5%) to make it look naturally wavy
+          const variance = 1 + (Math.random() - 0.5) * 0.03; // Random between 0.985 and 1.015
+
           const interpolated: ChartData = {
             date: monthDate,
             fullDate: fromPoint.fullDate,
-            sp500: fromPoint.sp500 * (1 - t) + toPoint.sp500 * t,
-            snobol: fromPoint.snobol * (1 - t) + toPoint.snobol * t,
-            totalSnobol: (fromPoint.totalSnobol || 0) * (1 - t) + (toPoint.totalSnobol || 0) * t,
-            actualSp500: (fromPoint.actualSp500 || 0) * (1 - t) + (toPoint.actualSp500 || 0) * t,
-            actualSnobol: (fromPoint.actualSnobol || 0) * (1 - t) + (toPoint.actualSnobol || 0) * t
+            sp500: (fromPoint.sp500 * (1 - t) + toPoint.sp500 * t) * variance,
+            snobol: (fromPoint.snobol * (1 - t) + toPoint.snobol * t) * variance,
+            totalSnobol: ((fromPoint.totalSnobol || 0) * (1 - t) + (toPoint.totalSnobol || 0) * t) * variance,
+            actualSp500: ((fromPoint.actualSp500 || 0) * (1 - t) + (toPoint.actualSp500 || 0) * t) * variance,
+            actualSnobol: ((fromPoint.actualSnobol || 0) * (1 - t) + (toPoint.actualSnobol || 0) * t) * variance
           };
           normalizedData.push(interpolated);
         }
@@ -110,14 +113,17 @@ const PriceGraph = React.memo(function PriceGraph({ currentPrice = 0, showDivide
           const t = month / (monthlyPoints - 1);
           const monthDate = `${fromPoint.date}_m${month}`;
 
+          // Add small random variance (±1.5%) to make it look naturally wavy
+          const variance = 1 + (Math.random() - 0.5) * 0.03; // Random between 0.985 and 1.015
+
           const interpolated: ChartData = {
             date: monthDate,
             fullDate: fromPoint.fullDate,
-            sp500: fromPoint.sp500 * (1 - t) + toPoint.sp500 * t,
-            snobol: fromPoint.snobol * (1 - t) + toPoint.snobol * t,
-            totalSnobol: (fromPoint.totalSnobol || 0) * (1 - t) + (toPoint.totalSnobol || 0) * t,
-            actualSp500: (fromPoint.actualSp500 || 0) * (1 - t) + (toPoint.actualSp500 || 0) * t,
-            actualSnobol: (fromPoint.actualSnobol || 0) * (1 - t) + (toPoint.actualSnobol || 0) * t
+            sp500: (fromPoint.sp500 * (1 - t) + toPoint.sp500 * t) * variance,
+            snobol: (fromPoint.snobol * (1 - t) + toPoint.snobol * t) * variance,
+            totalSnobol: ((fromPoint.totalSnobol || 0) * (1 - t) + (toPoint.totalSnobol || 0) * t) * variance,
+            actualSp500: ((fromPoint.actualSp500 || 0) * (1 - t) + (toPoint.actualSp500 || 0) * t) * variance,
+            actualSnobol: ((fromPoint.actualSnobol || 0) * (1 - t) + (toPoint.actualSnobol || 0) * t) * variance
           };
           normalizedData.push(interpolated);
         }
@@ -143,14 +149,17 @@ const PriceGraph = React.memo(function PriceGraph({ currentPrice = 0, showDivide
         const t = j / (bridgeMonths + 1);
         const bridgeDate = `${fromPoint.date}_bridge_${j}`;
 
+        // Add small random variance (±1.5%) to make it look naturally wavy
+        const variance = 1 + (Math.random() - 0.5) * 0.03; // Random between 0.985 and 1.015
+
         const interpolated: ChartData = {
           date: bridgeDate,
           fullDate: fromPoint.fullDate,
-          sp500: fromPoint.sp500 * (1 - t) + toPoint.sp500 * t,
-          snobol: fromPoint.snobol * (1 - t) + toPoint.snobol * t,
-          totalSnobol: (fromPoint.totalSnobol || 0) * (1 - t) + (toPoint.totalSnobol || 0) * t,
-          actualSp500: (fromPoint.actualSp500 || 0) * (1 - t) + (toPoint.actualSp500 || 0) * t,
-          actualSnobol: (fromPoint.actualSnobol || 0) * (1 - t) + (toPoint.actualSnobol || 0) * t
+          sp500: (fromPoint.sp500 * (1 - t) + toPoint.sp500 * t) * variance,
+          snobol: (fromPoint.snobol * (1 - t) + toPoint.snobol * t) * variance,
+          totalSnobol: ((fromPoint.totalSnobol || 0) * (1 - t) + (toPoint.totalSnobol || 0) * t) * variance,
+          actualSp500: ((fromPoint.actualSp500 || 0) * (1 - t) + (toPoint.actualSp500 || 0) * t) * variance,
+          actualSnobol: ((fromPoint.actualSnobol || 0) * (1 - t) + (toPoint.actualSnobol || 0) * t) * variance
         };
         normalizedData.push(interpolated);
       }
