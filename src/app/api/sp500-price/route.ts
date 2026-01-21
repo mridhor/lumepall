@@ -1,18 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { addTodayData, checkAndRecordYearlyData, FinancialData } from '@/utils/chartData'
-import type { SupabaseClient } from '@supabase/supabase-js'
 
-let cachedSupabase: SupabaseClient | null | undefined
-async function getSupabaseClient(): Promise<SupabaseClient | null> {
-  if (cachedSupabase !== undefined) return cachedSupabase
-  try {
-    const { supabase } = await import('@/lib/supabase')
-    cachedSupabase = supabase
-  } catch {
-    cachedSupabase = null
-  }
-  return cachedSupabase ?? null
-}
 
 function getNormalizationBounds(): { min: number; max: number } {
   const minEnv = Number(process.env.SNOBOL_NORMAL_MIN)
@@ -53,58 +41,7 @@ export async function GET(request: NextRequest) {
   const origin = new URL(request.url).origin
   try {
     const { min: normalMin, max: normalMax } = getNormalizationBounds()
-    // Prefer Supabase historical snobol series
-    const supabase = await getSupabaseClient()
-    let sbFinancialData: FinancialData[] | null = null
-    if (supabase) {
-      try {
-        const { data } = await supabase
-          .from('lumepall_history')
-          .select('date,snobol')
-          .order('date', { ascending: true })
-        if (Array.isArray(data)) {
-          type DBRow = { date: string; snobol: number }
-          const parsed = (data as unknown as DBRow[])
-            .map((r) => ({ date: r.date, snobol: Number(r.snobol), sp500: 1 })) // Temporary sp500, will be updated later
-            // Filter out zero/invalid values - keep all positive values including early years
-            .filter(d => d.date && isFinite(d.snobol) && d.snobol > 0)
 
-          // Use Supabase data if it has valid entries
-          if (parsed.length > 50) {
-            sbFinancialData = parsed
-          }
-        }
-      } catch { }
-    }
-
-    // Try to load Snobol historical data from CSV if Supabase not present
-    let csvFinancialData: FinancialData[] | null = null;
-    try {
-      const csvRes = await fetch(`${origin}/chartData.csv`);
-      if (csvRes.ok) {
-        const text = await csvRes.text();
-        const lines = text.trim().split('\n');
-        // Expect header: datetime_utc,value
-        const rows = lines.slice(1);
-        csvFinancialData = rows
-          .map((line) => {
-            const [datetimeUtc, valueStr] = line.split(',');
-            const dateObj = new Date(datetimeUtc.replace(' ', 'T') + 'Z');
-            if (isNaN(dateObj.getTime())) return null;
-            const formatted = dateObj.toLocaleDateString('en-US', {
-              month: 'short',
-              day: 'numeric',
-              year: 'numeric',
-            });
-            const snobolVal = Number(valueStr);
-            if (!isFinite(snobolVal)) return null;
-            return { date: formatted, snobol: snobolVal, sp500: 1 } as FinancialData; // Temporary sp500, will be updated later
-          })
-          .filter((v): v is FinancialData => Boolean(v));
-      }
-    } catch {
-      // Ignore CSV issues; we'll fall back to default utils-based data
-    }
     // Fetch historical S&P 500 data from 2013-08-08 to today
     const baselineDate = new Date('2013-08-08');
     const baselineTimestamp = Math.floor(baselineDate.getTime() / 1000);
@@ -130,29 +67,8 @@ export async function GET(request: NextRequest) {
       const meta = result.meta;
       const actualPrice = meta.regularMarketPrice;
 
-      // Extract historical S&P500 data
-      const timestamps = result.timestamp || [];
-      const closes = result.indicators?.quote?.[0]?.close || [];
-
-      // Create a map of date -> S&P500 closing price
-      const sp500HistoricalMap = new Map<string, number>();
+      // Calculate normalized price of S&P 500 based on 8/8/2013 baseline
       const baselinePrice = 1697.48;
-
-      timestamps.forEach((timestamp: number, index: number) => {
-        const date = new Date(timestamp * 1000);
-        const formatted = date.toLocaleDateString('en-US', {
-          month: 'short',
-          day: 'numeric',
-          year: 'numeric',
-        });
-        const closePrice = closes[index];
-        if (closePrice != null && isFinite(closePrice)) {
-          // Store normalized S&P500 value
-          sp500HistoricalMap.set(formatted, closePrice / baselinePrice);
-        }
-      });
-
-      // Calculate normalized price of S&P 500 based on 8/8/2013 baseline (already defined above)
       const normalizedPrice = actualPrice / baselinePrice;
 
       // Get current Snobol price from admin panel
@@ -167,39 +83,9 @@ export async function GET(request: NextRequest) {
         console.log('Using default Snobol price:', currentSnobolPrice);
       }
 
-      // Build updated financial data:
-      // PRIORITY: CSV first (has correct 2015-2025 values), then Supabase as fallback
-      let baseData: FinancialData[] = [];
-      if (csvFinancialData && csvFinancialData.length > 0) {
-        // Use CSV data - it has complete 2013-2025 values without zeros
-        const map = new Map<string, FinancialData>();
-        for (const row of csvFinancialData) {
-          // Only keep data with non-zero values (accept all positive values including early years)
-          if (row.snobol > 0) {
-            // Get historical S&P500 value for this date, or use baseline if not found
-            const sp500Value = sp500HistoricalMap.get(row.date) || 1;
-            map.set(row.date, { ...row, sp500: sp500Value });
-          }
-        }
-        baseData = Array.from(map.values()).sort((a, b) => {
-          return new Date(a.date).getTime() - new Date(b.date).getTime();
-        });
-      } else if (sbFinancialData && sbFinancialData.length > 0) {
-        // Fallback to Supabase data
-        const map = new Map<string, FinancialData>();
-        for (const row of sbFinancialData) {
-          // Get historical S&P500 value for this date, or use baseline if not found
-          const sp500Value = sp500HistoricalMap.get(row.date) || 1;
-          map.set(row.date, { ...row, sp500: sp500Value });
-        }
-        baseData = Array.from(map.values()).sort((a, b) => {
-          return new Date(a.date).getTime() - new Date(b.date).getTime();
-        });
-      } else {
-        // Last resort: use embedded data from chartData.ts
-        baseData = addTodayData(currentSnobolPrice, normalizedPrice);
-        baseData = baseData.slice(0, -1);
-      }
+      // Use embedded data from chartData.ts - it has correct S&P500 interpolation via getSp500ForDate
+      let baseData = addTodayData(currentSnobolPrice, normalizedPrice);
+      baseData = baseData.slice(0, -1); // Remove the appended "today" point, we'll add it back with fresh data
 
       // Append today's point using configured normalized scale
       const today = new Date();
