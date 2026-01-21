@@ -265,6 +265,7 @@ const embeddedCsv = `datetime_utc,value
 2025-10-19 20:59:59,1.8
 2025-10-26 21:59:59,1.803
 2025-10-28 21:59:59,1.7957
+2025-11-30 21:59:59,1.8278
 2025-12-31 00:00:00,1.8596
 `;
 
@@ -298,7 +299,7 @@ function parseCsv(csv: string): FinancialData[] {
 }
 
 // Cache version - increment this to force all users to refresh their data
-const CACHE_VERSION = '2.0'; // Updated: Added 2013-2020 historical data
+const CACHE_VERSION = '2.1'; // Updated: Added November and December 2025 data
 
 export const financialData: FinancialData[] = (() => {
   // Prefer persisted client-side data
