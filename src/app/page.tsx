@@ -50,6 +50,9 @@ const PriceGraph = React.memo(function PriceGraph({ currentPrice = 0 }: PriceGra
       return new Date(a.fullDate).getTime() - new Date(b.fullDate).getTime();
     });
 
+    // Lumepall baseline value on Aug 8, 2013
+    const lumepallBaseline = 0.075;
+
     // Get first and last dates
     const firstDate = new Date(sorted[0].fullDate);
     const lastDate = new Date(sorted[sorted.length - 1].fullDate);
@@ -84,13 +87,14 @@ const PriceGraph = React.memo(function PriceGraph({ currentPrice = 0 }: PriceGra
       const interpolatedValue = (before.totalSnobol || 0) * (1 - t) + (after.totalSnobol || 0) * t;
       const interpolatedActual = (before.actualSnobol || 0) * (1 - t) + (after.actualSnobol || 0) * t;
 
-      // S&P500 is already a normalized ratio (just like totalSnobol), so interpolate it directly
-      const interpolatedSp500 = before.sp500 * (1 - t) + after.sp500 * t;
+      // S&P500 interpolation - scale to Lumepall's baseline (0.075) so both lines start at same point
+      const interpolatedSp500Raw = before.sp500 * (1 - t) + after.sp500 * t;
+      const interpolatedSp500 = interpolatedSp500Raw * lumepallBaseline;
 
       bimonthlyData.push({
         date: currentDate.toISOString().split('T')[0],
         fullDate: currentDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
-        sp500: interpolatedSp500,
+        sp500: interpolatedSp500Raw,
         snobol: before.snobol * (1 - t) + after.snobol * t,
         totalSnobol: interpolatedValue,
         actualSnobol: interpolatedActual,
