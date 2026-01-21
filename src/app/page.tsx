@@ -42,7 +42,7 @@ interface PriceGraphProps {
 }
 
 const PriceGraph = React.memo(function PriceGraph({ currentPrice = 0, showDivider = true }: PriceGraphProps) {
-  // Helper function to make pre-2021 section longer while keeping all post-2021 detail
+  // Helper function to normalize all data to monthly intervals (12 points per year)
   const normalizeChartData = (data: ChartData[]): ChartData[] => {
     if (data.length === 0) return data;
 
@@ -62,49 +62,56 @@ const PriceGraph = React.memo(function PriceGraph({ currentPrice = 0, showDivide
     const pre2021Years = sortedYears.filter(y => y < 2021);
     const post2021Years = sortedYears.filter(y => y >= 2021);
 
-    // Calculate total post-2021 data points (keep all detail)
-    const post2021TotalPoints = post2021Years.reduce((sum, year) =>
-      sum + yearGroups.get(year)!.length, 0);
-
-    // Make pre-2021 section longer and smoother: aim for 2x the post-2021 total points
-    // This ensures smooth curves with enough data points for monotone interpolation
-    const pre2021TotalTarget = Math.floor(post2021TotalPoints * 2);
-    const pre2021PointsPerYear = Math.max(52, Math.floor(pre2021TotalTarget / (pre2021Years.length - 1)));
-
+    const monthlyPoints = 12; // One data point per month for entire timeline (2013-2025)
     const normalizedData: ChartData[] = [];
 
-    // Process pre-2021 years with smooth interpolation to make them longer
-    // For each consecutive pair of years, create smooth interpolated points
+    // Process pre-2021 years with monthly interpolation (12 points per year)
     for (let i = 0; i < pre2021Years.length; i++) {
       const currentYear = pre2021Years[i];
       const yearData = yearGroups.get(currentYear)!.sort((a, b) => {
         return new Date(a.fullDate).getTime() - new Date(b.fullDate).getTime();
       });
 
-      // Add the current year's data point(s)
-      normalizedData.push(...yearData);
+      // Add the first point of the year
+      normalizedData.push(yearData[0]);
 
-      // If there's a next year, interpolate smoothly between them
+      // If there's a next year, interpolate monthly between them
       if (i < pre2021Years.length - 1) {
         const nextYear = pre2021Years[i + 1];
         const nextYearData = yearGroups.get(nextYear)!.sort((a, b) => {
           return new Date(a.fullDate).getTime() - new Date(b.fullDate).getTime();
         });
 
-        // Get the last point of current year and first point of next year
         const fromPoint = yearData[yearData.length - 1];
         const toPoint = nextYearData[0];
 
-        // Add many smooth interpolation points between years (e.g., 50 points per year gap)
-        const interpolationSteps = pre2021PointsPerYear - 1;
-        for (let j = 1; j < interpolationSteps; j++) {
-          const t = j / interpolationSteps;
-
-          // Create unique intermediate date for x-axis positioning
-          const intermediateDate = `${fromPoint.date}_${j}`;
+        // Add 11 monthly interpolation points (Jan to Nov, Dec is the year-end point)
+        for (let month = 1; month < monthlyPoints; month++) {
+          const t = month / monthlyPoints;
+          const monthDate = `${fromPoint.date}_m${month}`;
 
           const interpolated: ChartData = {
-            date: intermediateDate,
+            date: monthDate,
+            fullDate: fromPoint.fullDate,
+            sp500: fromPoint.sp500 * (1 - t) + toPoint.sp500 * t,
+            snobol: fromPoint.snobol * (1 - t) + toPoint.snobol * t,
+            totalSnobol: (fromPoint.totalSnobol || 0) * (1 - t) + (toPoint.totalSnobol || 0) * t,
+            actualSp500: (fromPoint.actualSp500 || 0) * (1 - t) + (toPoint.actualSp500 || 0) * t,
+            actualSnobol: (fromPoint.actualSnobol || 0) * (1 - t) + (toPoint.actualSnobol || 0) * t
+          };
+          normalizedData.push(interpolated);
+        }
+      } else {
+        // Last pre-2021 year: add 11 monthly points leading to year end
+        const fromPoint = yearData[0];
+        const toPoint = yearData[yearData.length - 1];
+
+        for (let month = 1; month <= monthlyPoints - 1; month++) {
+          const t = month / (monthlyPoints - 1);
+          const monthDate = `${fromPoint.date}_m${month}`;
+
+          const interpolated: ChartData = {
+            date: monthDate,
             fullDate: fromPoint.fullDate,
             sp500: fromPoint.sp500 * (1 - t) + toPoint.sp500 * t,
             snobol: fromPoint.snobol * (1 - t) + toPoint.snobol * t,
@@ -117,43 +124,24 @@ const PriceGraph = React.memo(function PriceGraph({ currentPrice = 0, showDivide
       }
     }
 
-    // Add smooth bridge between Dec 31, 2020 and first 2021 point (April 1, 2021)
-    if (pre2021Years.length > 0 && post2021Years.length > 0) {
-      const last2020Data = yearGroups.get(pre2021Years[pre2021Years.length - 1])!.sort((a, b) => {
-        return new Date(a.fullDate).getTime() - new Date(b.fullDate).getTime();
-      });
-      const first2021Data = yearGroups.get(post2021Years[0])!.sort((a, b) => {
-        return new Date(a.fullDate).getTime() - new Date(b.fullDate).getTime();
-      });
-
-      const fromPoint = last2020Data[last2020Data.length - 1];
-      const toPoint = first2021Data[0];
-
-      // Add ~20 interpolation points between Dec 31, 2020 and April 1, 2021
-      const bridgeSteps = 20;
-      for (let j = 1; j < bridgeSteps; j++) {
-        const t = j / bridgeSteps;
-        const bridgeDate = `${fromPoint.date}_bridge_${j}`;
-
-        const interpolated: ChartData = {
-          date: bridgeDate,
-          fullDate: fromPoint.fullDate,
-          sp500: fromPoint.sp500 * (1 - t) + toPoint.sp500 * t,
-          snobol: fromPoint.snobol * (1 - t) + toPoint.snobol * t,
-          totalSnobol: (fromPoint.totalSnobol || 0) * (1 - t) + (toPoint.totalSnobol || 0) * t,
-          actualSp500: (fromPoint.actualSp500 || 0) * (1 - t) + (toPoint.actualSp500 || 0) * t,
-          actualSnobol: (fromPoint.actualSnobol || 0) * (1 - t) + (toPoint.actualSnobol || 0) * t
-        };
-        normalizedData.push(interpolated);
-      }
-    }
-
-    // Process post-2021 years - keep ALL original data points
+    // Process post-2021 years - sample to monthly data (12 points per year)
     post2021Years.forEach(year => {
       const yearData = yearGroups.get(year)!.sort((a, b) => {
         return new Date(a.fullDate).getTime() - new Date(b.fullDate).getTime();
       });
-      normalizedData.push(...yearData);
+
+      const monthlyPoints = 12; // One data point per month
+
+      if (yearData.length <= monthlyPoints) {
+        // If we have fewer than 12 points, use all of them
+        normalizedData.push(...yearData);
+      } else {
+        // Sample evenly to get monthly representation
+        for (let i = 0; i < monthlyPoints; i++) {
+          const index = Math.floor((i * yearData.length) / monthlyPoints);
+          normalizedData.push(yearData[index]);
+        }
+      }
     });
 
     return normalizedData.sort((a, b) => {
@@ -238,7 +226,7 @@ const PriceGraph = React.memo(function PriceGraph({ currentPrice = 0, showDivide
         });
 
         if (isMounted) {
-          // Apply normalization: expand pre-2021, keep all post-2021 detail
+          // Apply normalization: monthly data for entire timeline (2013-2025)
           setChartData(normalizeChartData(updatedFormattedData));
         }
       } catch (error) {
