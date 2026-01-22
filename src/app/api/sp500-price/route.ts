@@ -71,13 +71,13 @@ export async function GET(request: NextRequest) {
       const baselinePrice = 1697.48;
       const normalizedPrice = actualPrice / baselinePrice;
 
-      // Get current Snobol price from admin panel
+      // Get current Snobol price from live share price API
       let currentSnobolPrice = 1.7957; // Default fallback
       try {
-        const priceResponse = await fetch(`${origin}/api/price`);
+        const priceResponse = await fetch(`${origin}/api/share-price`); // Use live share price
         const priceData = await priceResponse.json();
-        if (priceData.currentPrice) {
-          currentSnobolPrice = priceData.currentPrice;
+        if (priceData.sharePrice) {
+          currentSnobolPrice = priceData.sharePrice;
         }
       } catch {
         console.log('Using default Snobol price:', currentSnobolPrice);

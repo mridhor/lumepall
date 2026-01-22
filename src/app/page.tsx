@@ -172,8 +172,8 @@ const PriceGraph = React.memo(function PriceGraph({ currentPrice = 0 }: PriceGra
     const fetchPrices = async () => {
       try {
         const [sp500Response, sharePriceResponse] = await Promise.all([
-          fetch('/api/sp500-price'),
-          fetch('/api/share-price')
+          fetch('/api/sp500-price', { cache: 'no-store' }),
+          fetch('/api/share-price', { cache: 'no-store' })
         ]);
 
         const [sp500Data, sharePriceData] = await Promise.all([
@@ -183,7 +183,8 @@ const PriceGraph = React.memo(function PriceGraph({ currentPrice = 0 }: PriceGra
 
         const sp500Baseline = 1697.48;
         // Use the live share price from /api/share-price (calculated from live silver prices)
-        const liveSharePrice = sharePriceData.sharePrice;
+        // Or prefer the prop passed down if it's available and valid > 0 (to stay in sync with big label)
+        const liveSharePrice = (currentPrice > 0) ? currentPrice : sharePriceData.sharePrice;
 
         const updatedFormattedData = sp500Data.updatedData.map((item: { date: string; sp500: number; snobol: number }, index: number) => {
           const isLatestPoint = index === sp500Data.updatedData.length - 1;
